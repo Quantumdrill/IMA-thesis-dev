@@ -1,15 +1,23 @@
 <script setup>
-import {ref} from "vue"
+import {ref, onMounted} from "vue"
+import {useRouter} from "vue-router"
 
+
+let router = useRouter()
 let lorumPlaceholder = "Lorum Ipsum "
 const browserTopHeight = window.outerHeight - window.innerHeight
 const leftBridge = ref(null)
 const rightBridge = ref(null)
+const nextButton = ref(null)
 let bridgeStatus = {
     left: {occupied: false},
     right: {occupied: false}
 }
 let popups = []
+
+onMounted(() => {
+    // nextButton.value.disabled = true
+})
 
 function openPopup(left,top,vw){
     let newWindow
@@ -22,7 +30,7 @@ function openPopup(left,top,vw){
     return newWindow
 }
 
-function popupButtonClick(){
+function popupNewInstance(){
     let newPopup = {
         window: openPopup(500,200,15),
         locked: false
@@ -37,15 +45,19 @@ function popupTick(){
     if (popups.length<1){
         cancelAnimationFrame(popupTick)
     }
-    popupCloseCheck()
     for (let i=0;i<popups.length;i++){ //iterate for all opened popups
-        if (popups[i].locked){
-            popupFixPosition(popups[i].window,popups[i].lockedPositionX,popups[i].lockedPositionY)
+        let popup = popups[i]
+        if (document.hasFocus()){
+            popup.window.focus()
         }
-        popupFixSize(popups[i].window,15)
-        popupSnapCheck(popups[i])
+        popupCloseCheck(popup,i)
+        if (popup.locked){
+            popupFixPosition(popup.window,popup.lockedPositionX,popup.lockedPositionY)
+        }
+        popupFixSize(popup.window,15)
+        popupSnapCheck(popup)
     }
-    console.log(bridgeStatus.left.occupied)
+    // console.log(bridgeStatus.left.occupied)
     requestAnimationFrame(popupTick)
 }
 
@@ -72,6 +84,7 @@ function popupSnapCheck(popupObj){
             popupObj.locked = true
             popupObj.lockedPositionX = window.innerWidth*32.5/100-5
             popupObj.lockedPositionY = window.innerHeight*48/100+browserTopHeight
+            popupObj.occupyingBridge = "left"
             bridgeStatus.left.occupied = true
         } else {
             leftBridge.value.style.borderStyle = "hidden"
@@ -87,43 +100,56 @@ function popupSnapCheck(popupObj){
             popupObj.locked = true
             popupObj.lockedPositionX = window.innerWidth*52.5/100-5
             popupObj.lockedPositionY = window.innerHeight*38/100+browserTopHeight
+            popupObj.occupyingBridge = "right"
             bridgeStatus.right.occupied = true
         } else {
             leftBridge.value.style.borderStyle = "hidden"
-            
         }
     } else {
         rightBridge.value.style.borderStyle = "hidden"
     }
 }
 
-function popupCloseCheck(){
-    for (let i=0;i<popups.length;i++){
-        if (popups[i].window.closed){
-            popups.splice(i,1) //remove the popup from the array if it is closed
-            leftBridge.value.style.borderStyle = "hidden" //when the popup is closed while enabling border, hide the border
-            rightBridge.value.style.borderStyle = "hidden"
-        }
+function popupCloseCheck(popupObj,i){
+    if (popupObj.window.closed){
+        popups.splice(i,1) //remove the popup from the array if it is closed
+        leftBridge.value.style.borderStyle = "hidden" //when the popup is closed while enabling border, hide the border
+        rightBridge.value.style.borderStyle = "hidden"
+        bridgeStatus[popupObj.occupyingBridge].occupied = false //when the popup is closed, restore the occupying status of the occupied bridge
     }
 }
 
+function nextButtonAction(){
+    for (let i=0;i<popups.length;i++){
+        popups[i].window.close()
+    }
+    router.push('/stage22')
+}
+
 </script>
+
+
+
 <template>
     <div id="body">
-        <button @click="popupButtonClick">Create a popup window</button>
+        <button id="popupButton" @click="popupNewInstance">Create a popup window</button>
         <div class="block" id="leftPlatform">{{ lorumPlaceholder.repeat(50) }}</div>
         <div class="block" id="leftBridge" ref="leftBridge"></div>
         <div class="block" id="rightBridge" ref="rightBridge"></div>
+        <button id="nextButton" @click="nextButtonAction" ref="nextButton">next</button>
         <div class="block" id="rightPlatform">{{ lorumPlaceholder.repeat(50) }}</div>
     </div>
 </template>
+
+
+
 <style scoped>
 #body {
     position: relative;
 }
 
 .block{
-    background-color: rgb(111, 129, 209);
+    /* background-color: rgb(111, 129, 209); */
 }
 
 #leftPlatform{
@@ -164,5 +190,21 @@ function popupCloseCheck(){
     top: 38vh;
     border-style: hidden;
     border-width: 4px;
+}
+
+#popupButton{
+    position: fixed;
+    left: 5vw;
+    top: 20vh;
+}
+
+#nextButton{
+    position: fixed;
+    right: 10vw;
+    top: 25vh;
+}
+
+#nextButton:disabled {
+    color: #aaa;
 }
 </style>
