@@ -3,7 +3,7 @@
 }
 
 body {
-  overflow-y: scroll;
+  /* overflow-y: scroll; */
 }
 
 h1, h2, p, div {

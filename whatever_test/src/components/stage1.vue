@@ -1,5 +1,10 @@
 <script setup>
+import {useRouter} from "vue-router"
+
 let lorumPlaceholder = "Lorum Ipsum "
+
+const router = useRouter()
+
 </script>
 <template>
     <div id="page">
@@ -29,7 +34,7 @@ let lorumPlaceholder = "Lorum Ipsum "
                 <div class="blockImageContainer">ImagePlaceholder</div>
                 <div class="blockText">
                     <p>{{ lorumPlaceholder.repeat(100) }}</p>
-                    <router-link id="button3" to="/stage21">Get The Cookie Now!</router-link>
+                    <button id="button3" @click="router.push('/stage21')">Get The Cookie Now!</button>
                 </div>
             </div>
         </div>
@@ -97,6 +102,5 @@ h2 {
 #button3 {
     width: 10vw;
     align-self: flex-end;
-    background-color: hsl(0, 0%, 90%);
 }
 </style>

@@ -17,6 +17,7 @@ import stage82 from "./components/stage82.vue"
 import stage83 from "./components/stage83.vue"
 import stage9 from "./components/stage9.vue"
 import endPage from "./components/endPage.vue"
+import popupSquare from "./components/popupSquare.vue"
 
 const routes = [
   { path: "/", component: startPage },
@@ -24,6 +25,7 @@ const routes = [
   { path: "/stage21", component: stage21 },
   { path: "/stage22", component: stage22 },
   { path: "/stage23", component: stage23 },
+  { path: "/popupSquare", component: popupSquare },
 ]
 
 export const router = createRouter({
