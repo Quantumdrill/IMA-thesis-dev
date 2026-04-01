@@ -4,7 +4,7 @@ import {useRouter} from "vue-router"
 
 
 let router = useRouter()
-let lorumPlaceholder = "Lorum Ipsum "
+let lorumPlaceholder = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum"
 const browserTopHeight = window.outerHeight - window.innerHeight
 const leftBridge = ref(null)
 const rightBridge = ref(null)
@@ -133,11 +133,11 @@ function nextButtonAction(){
 <template>
     <div id="body">
         <button id="popupButton" @click="popupNewInstance">Create a popup window</button>
-        <div class="block" id="leftPlatform">{{ lorumPlaceholder.repeat(50) }}</div>
+        <div class="block" id="leftPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
         <div class="block" id="leftBridge" ref="leftBridge"></div>
         <div class="block" id="rightBridge" ref="rightBridge"></div>
         <button id="nextButton" @click="nextButtonAction" ref="nextButton">next</button>
-        <div class="block" id="rightPlatform">{{ lorumPlaceholder.repeat(50) }}</div>
+        <div class="block" id="rightPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
     </div>
 </template>
 
