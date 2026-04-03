@@ -2,7 +2,7 @@
 
 </script>
 <template>
-    <p>hihihi</p>
+    <p>start page</p>
 </template>
 <style scoped>
 
