@@ -25,7 +25,7 @@ const routes = [
   { path: "/stage21", component: stage21 },
   { path: "/stage22", component: stage22 },
   { path: "/stage23", component: stage23 },
-  { path: "/popupSquare", component: popupSquare },
+  { path: "/popupSquare/:index", component: popupSquare },
 ]
 
 export const router = createRouter({

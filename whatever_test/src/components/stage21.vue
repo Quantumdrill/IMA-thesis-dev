@@ -9,28 +9,46 @@ const browserTopHeight = window.outerHeight - window.innerHeight
 const bridges = {
     left: {
         dom: useTemplateRef("bridgesLeftDom"),
+        highlight: false,
         occupied: false
     },
     right: {
         dom: useTemplateRef("bridgesRightDom"),
+        highlight: false,
         occupied: false
     },
 }
-const nextButton = ref(null)
+const nextButton = useTemplateRef("nextButton")
     
 let popups = []
+let popupIndex = 0
 let chan
-console.log(bridges.left.dom.value)
 
 onMounted(() => {
     chan = new BroadcastChannel("global")
+    chan.onmessage=(e)=>{
+        if (e.data.type==="snapButtonAction"){
+            let popup
+            popups.forEach(elem=>{
+                if (elem.index===e.data.index){
+                    popup = elem
+                }
+            })
+            bridges[popup.occupyingBridge].occupied = true
+            popup.locked = true
+        }
+    }
     // nextButton.value.disabled = true
 })
 
-function openPopup(left,top,vw){
+
+
+
+
+function openPopup(popupID,left,top,vw){
     let newWindow
     newWindow = window.open(
-        `/popupSquare`, 
+        `/popupSquare/${popupID}`, 
         `bridge${popups.length}`,  //provide different names to open multiple popups
         `left=${left},top=${top},width=500,height=500`
     )
@@ -40,12 +58,13 @@ function openPopup(left,top,vw){
 
 function popupNewInstance(){
     let newPopup = {
-        window: openPopup(500,200,15),
+        window: openPopup(popupIndex,500,200,15),
         locked: false,
         inPos: false,
         inPosPrev: false,
-        index: popups.length
+        index: popupIndex
     }
+    popupIndex += 1
     popups.push(newPopup)
     if (popups.length===1){
         requestAnimationFrame(popupTick)
@@ -56,26 +75,35 @@ function popupTick(){
     if (popups.length<1){
         cancelAnimationFrame(popupTick)
     }
-    for (let i=0;i<popups.length;i++){ //iterate for all opened popups
+
+    // disable dashed border highlight every frame before snap check
+    // can't iterate through popups because the each popup's snap check will overwrite the status of the previous popup snap check
+    bridges.left.highlight = false 
+    bridges.right.highlight = false
+
+    popups.forEach((elem,i)=>{ //iterate for all opened popups
         let popup = popups[i]
         if (document.hasFocus()){
             popup.window.focus()
         }
         popupCloseCheck(popup,i)
         popupFixSize(popup.window,15)
+        if (elem.locked){
+            popupFixPosition(elem.window,elem.lockedPositionX,elem.lockedPositionY)
+        }
         popupSnapCheck(popup)
 
+        // broadcast popup inpositio status to the popup
         if (popup.inPos!==popup.inPosPrev){ //check if popup inPosition state changes
             if (popup.inPos===true){
-                chan.postMessage({index:popup.index,action:true})
+                chan.postMessage({type:"snapButtonShow",index:popup.index,action:true})
             } else {
-                chan.postMessage({index:popup.index,action:false})
+                chan.postMessage({type:"snapButtonShow",index:popup.index,action:false})
             }
         }
         popup.inPosPrev = popup.inPos
-
-    }
-    // console.log(bridgeStatus.left.occupied)
+    })
+    bridgeHighlightUpdate()
     requestAnimationFrame(popupTick)
 }
 
@@ -97,40 +125,45 @@ function popupSnapCheck(popupObj){
 
     popupObj.inPos = false
     popupObj.occupyingBridge = "null"
-    bridges.left.dom.value.style.borderStyle = "hidden"
-    bridges.right.dom.value.style.borderStyle = "hidden"
 
     //left bridge snap check
     if (Math.abs(popupObj.window.screenX-window.innerWidth*32.5/100)<100&&Math.abs(popupObj.window.screenY-(window.innerHeight*48/100+browserTopHeight))<100){ // check if in position
         if (!bridges.left.occupied) { //check if the space is occupied
-            bridges.left.dom.value.style.borderStyle = "dashed"
             popupObj.inPos = true
             popupObj.lockedPositionX = window.innerWidth*32.5/100-5
             popupObj.lockedPositionY = window.innerHeight*48/100+browserTopHeight
             popupObj.occupyingBridge = "left"
-            // bridgeStatus.left.occupied = true
+            bridges.left.highlight = true
         }
     }
 
     //right bridge snap check
     if (Math.abs(popupObj.window.screenX-window.innerWidth*52.5/100)<100&&Math.abs(popupObj.window.screenY-(window.innerHeight*38/100+browserTopHeight))<100){ 
         if (!bridges.right.occupied) { 
-            bridges.right.dom.value.style.borderStyle = "dashed"
             popupObj.inPos = true
             popupObj.lockedPositionX = window.innerWidth*52.5/100-5
             popupObj.lockedPositionY = window.innerHeight*38/100+browserTopHeight
             popupObj.occupyingBridge = "right"
-            // bridgeStatus.right.occupied = true
+            bridges.right.highlight = true
         }
+    }
+}
+
+function bridgeHighlightUpdate(){ // update after snap check
+    bridges.left.dom.value.style.borderStyle = "hidden" //erase the dashed borders every frame before checking highlight status
+    bridges.right.dom.value.style.borderStyle = "hidden"
+    if (bridges.left.highlight){
+        bridges.left.dom.value.style.borderStyle = "dashed"
+    }
+    if (bridges.right.highlight){
+        bridges.right.dom.value.style.borderStyle = "dashed"
     }
 }
 
 function popupCloseCheck(popupObj,i){
     if (popupObj.window.closed){
         popups.splice(i,1) //remove the popup from the array if it is closed
-        bridges.left.dom.value.style.borderStyle = "hidden" //when the popup is closed while enabling border, hide the border
-        bridges.left.dom.value.style.borderStyle = "hidden"
-        bridgeStatus[popupObj.occupyingBridge].occupied = false //when the popup is closed, restore the occupying status of the occupied bridge
+        bridges[popupObj.occupyingBridge].highlight = false //when the popup is closed, restore the occupying status of the occupied bridge
     }
 }
 
