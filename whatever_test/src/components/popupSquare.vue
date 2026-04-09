@@ -9,14 +9,13 @@ const route = useRoute()
 const chan = new BroadcastChannel("global")
 
 chan.onmessage=(e)=>{
-    if (e.data.type === "snapButtonShow" && e.data.index === Number(route.params.index)){ //the param is a string
+    if (e.data.type === "snapButtonShow" && e.data.id === Number(route.params.id)){ //the param is a string
         disp.value = e.data.action
     }
 }
 
 function snapInPlace(){
-    chan.postMessage({type: "snapButtonAction", index:Number(route.params.index)})
-    console.log(disp, locked)
+    chan.postMessage({type: "snapButtonAction", id:Number(route.params.id)})
     locked.value = true
 }
 

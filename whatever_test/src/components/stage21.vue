@@ -1,6 +1,7 @@
 <script setup>
 import {ref, onMounted, useTemplateRef} from "vue"
 import {useRouter} from "vue-router"
+import { popupNewInstance, popupFixSize, popupFixPosition, popupSnapCheck, popupCloseCheck } from "../functions/popup"
 
 
 let router = useRouter()
@@ -10,18 +11,22 @@ const bridges = {
     left: {
         dom: useTemplateRef("bridgesLeftDom"),
         highlight: false,
-        occupied: false
+        occupied: false,
+        xPos: window.innerWidth*32.5/100,
+        yPos: window.innerHeight*48/100+browserTopHeight
     },
     right: {
         dom: useTemplateRef("bridgesRightDom"),
         highlight: false,
-        occupied: false
+        occupied: false,
+        xPos: window.innerWidth*52.5/100,
+        yPos: window.innerHeight*38/100+browserTopHeight
     },
 }
 const nextButton = useTemplateRef("nextButton")
     
 let popups = []
-let popupIndex = 0
+let popupID = 0
 let chan
 
 onMounted(() => {
@@ -30,7 +35,7 @@ onMounted(() => {
         if (e.data.type==="snapButtonAction"){
             let popup
             popups.forEach(elem=>{
-                if (elem.index===e.data.index){
+                if (elem.id===e.data.id){
                     popup = elem
                 }
             })
@@ -41,35 +46,6 @@ onMounted(() => {
     // nextButton.value.disabled = true
 })
 
-
-
-
-
-function openPopup(popupID,left,top,vw){
-    let newWindow
-    newWindow = window.open(
-        `/popupSquare/${popupID}`, 
-        `bridge${popups.length}`,  //provide different names to open multiple popups
-        `left=${left},top=${top},width=500,height=500`
-    )
-    newWindow.resizeTo(window.outerWidth*vw/100*1.04,window.outerWidth*vw/100*1.02)
-    return newWindow
-}
-
-function popupNewInstance(){
-    let newPopup = {
-        window: openPopup(popupIndex,500,200,15),
-        locked: false,
-        inPos: false,
-        inPosPrev: false,
-        index: popupIndex
-    }
-    popupIndex += 1
-    popups.push(newPopup)
-    if (popups.length===1){
-        requestAnimationFrame(popupTick)
-    }
-}
 
 function popupTick(){
     if (popups.length<1){
@@ -84,70 +60,29 @@ function popupTick(){
     popups.forEach((elem,i)=>{ //iterate for all opened popups
         let popup = popups[i]
         if (document.hasFocus()){
-            popup.window.focus()
+            elem.window.focus()
         }
-        popupCloseCheck(popup,i)
-        popupFixSize(popup.window,15)
+        popupCloseCheck(elem,popups,i,bridges)
+        popupFixSize(elem.window,15)
         if (elem.locked){
             popupFixPosition(elem.window,elem.lockedPositionX,elem.lockedPositionY)
         }
-        popupSnapCheck(popup)
+        popupSnapCheck(elem,bridges)
 
         // broadcast popup inpositio status to the popup
-        if (popup.inPos!==popup.inPosPrev){ //check if popup inPosition state changes
-            if (popup.inPos===true){
-                chan.postMessage({type:"snapButtonShow",index:popup.index,action:true})
+        if (elem.inPos!==elem.inPosPrev){ //check if popup inPosition state changes
+            if (elem.inPos===true){
+                chan.postMessage({type:"snapButtonShow",id:elem.id,action:true})
             } else {
-                chan.postMessage({type:"snapButtonShow",index:popup.index,action:false})
+                chan.postMessage({type:"snapButtonShow",id:elem.id,action:false})
             }
         }
-        popup.inPosPrev = popup.inPos
+        elem.inPosPrev = elem.inPos
     })
     bridgeHighlightUpdate()
     requestAnimationFrame(popupTick)
 }
 
-
-function popupFixSize(popupWin,vw){
-    let sideSizePixel = window.outerWidth*vw/100
-    if (popupWin.outerWidth!==sideSizePixel||popupWin.outerHeight!==sideSizePixel){
-        popupWin.resizeTo(sideSizePixel*1.04,sideSizePixel*1.02)
-    }
-}
-
-function popupFixPosition(popupWin,x,y){
-    if (popupWin.screenX!==x||popupWin.screenY!==y){
-        popupWin.moveTo(x,y)
-    }
-}
-
-function popupSnapCheck(popupObj){
-
-    popupObj.inPos = false
-    popupObj.occupyingBridge = "null"
-
-    //left bridge snap check
-    if (Math.abs(popupObj.window.screenX-window.innerWidth*32.5/100)<100&&Math.abs(popupObj.window.screenY-(window.innerHeight*48/100+browserTopHeight))<100){ // check if in position
-        if (!bridges.left.occupied) { //check if the space is occupied
-            popupObj.inPos = true
-            popupObj.lockedPositionX = window.innerWidth*32.5/100-5
-            popupObj.lockedPositionY = window.innerHeight*48/100+browserTopHeight
-            popupObj.occupyingBridge = "left"
-            bridges.left.highlight = true
-        }
-    }
-
-    //right bridge snap check
-    if (Math.abs(popupObj.window.screenX-window.innerWidth*52.5/100)<100&&Math.abs(popupObj.window.screenY-(window.innerHeight*38/100+browserTopHeight))<100){ 
-        if (!bridges.right.occupied) { 
-            popupObj.inPos = true
-            popupObj.lockedPositionX = window.innerWidth*52.5/100-5
-            popupObj.lockedPositionY = window.innerHeight*38/100+browserTopHeight
-            popupObj.occupyingBridge = "right"
-            bridges.right.highlight = true
-        }
-    }
-}
 
 function bridgeHighlightUpdate(){ // update after snap check
     bridges.left.dom.value.style.borderStyle = "hidden" //erase the dashed borders every frame before checking highlight status
@@ -160,13 +95,6 @@ function bridgeHighlightUpdate(){ // update after snap check
     }
 }
 
-function popupCloseCheck(popupObj,i){
-    if (popupObj.window.closed){
-        popups.splice(i,1) //remove the popup from the array if it is closed
-        bridges[popupObj.occupyingBridge].highlight = false //when the popup is closed, restore the occupying status of the occupied bridge
-    }
-}
-
 function nextButtonAction(){
     for (let i=0;i<popups.length;i++){
         popups[i].window.close()
@@ -176,11 +104,9 @@ function nextButtonAction(){
 
 </script>
 
-
-
 <template>
     <div id="body">
-        <button id="popupButton" @click="popupNewInstance">Create a popup window</button>
+        <button id="popupButton" @click="popupNewInstance(popupID,popups,popupTick)">Create a popup window</button>
         <div class="block" id="leftPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
         <div class="block" id="leftBridge" ref="bridgesLeftDom"></div>
         <div class="block" id="rightBridge" ref="bridgesRightDom"></div>

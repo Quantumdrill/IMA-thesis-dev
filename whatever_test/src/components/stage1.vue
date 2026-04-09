@@ -1,7 +1,7 @@
 <script setup>
 import {useRouter} from "vue-router"
 
-let lorumPlaceholder = "Lorum Ipsum "
+let lorumPlaceholder = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum"
 
 const router = useRouter()
 
@@ -16,7 +16,7 @@ const router = useRouter()
             <div class="blockContent">
                 <div class="blockImageContainer">ImagePlaceholder</div>
                 <div class="blockText">
-                    <p>{{ lorumPlaceholder.repeat(100) }}</p>
+                    <p>{{ lorumPlaceholder.repeat(3) }}</p>
                 </div>
             </div>
         </div>
@@ -24,7 +24,7 @@ const router = useRouter()
             <h2>Placeholder 2</h2>
             <div class="blockContent">
                 <div class="blockText">
-                    <p>{{ lorumPlaceholder.repeat(100) }}</p>
+                    <p>{{ lorumPlaceholder.repeat(3) }}</p>
                 </div>
             </div>
         </div>
@@ -33,7 +33,7 @@ const router = useRouter()
             <div class="blockContent">
                 <div class="blockImageContainer">ImagePlaceholder</div>
                 <div class="blockText">
-                    <p>{{ lorumPlaceholder.repeat(100) }}</p>
+                    <p>{{ lorumPlaceholder.repeat(3) }}</p>
                     <button id="button3" @click="router.push('/stage21')">Get The Cookie Now!</button>
                 </div>
             </div>
@@ -42,7 +42,7 @@ const router = useRouter()
             <h2>Placeholder 4</h2>
             <div class="blockContent">
                 <div class="blockText">
-                    <p>{{ lorumPlaceholder.repeat(100) }}</p>
+                    <p>{{ lorumPlaceholder.repeat(3) }}</p>
                 </div>
                 <div class="blockImageContainer">ImagePlaceholder</div>
             </div>
@@ -90,6 +90,7 @@ h2 {
     width: 34vw;
     margin-right: 1vw;
 }
+
 
 .blockImageContainer {
     width: 34vw;
