@@ -1,7 +1,7 @@
 <script setup>
 import {ref, onMounted, useTemplateRef} from "vue"
 import {useRouter} from "vue-router"
-import { popupNewInstance, popupFixSize, popupFixPosition, popupSnapCheck, popupCloseCheck } from "../functions/popup"
+import { popupNewInstance, popupFixSize, popupFixPosition, popupSnapCheck, popupCloseCheck } from "../../functions/popup"
 
 
 let router = useRouter()
