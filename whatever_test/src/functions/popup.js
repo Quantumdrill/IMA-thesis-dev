@@ -4,7 +4,7 @@ export function openPopup(popupID,popups,left,top,vw){
     let newWindow
     newWindow = window.open(
         `/popupSquare/${popupID}`, 
-        `bridge${popups.length}`,  //provide different names to open multiple popups
+        `bridge${popupID}`,  //provide different names to open multiple popups
         `left=${left},top=${top},width=500,height=500`
     )
     newWindow.resizeTo(window.outerWidth*vw/100*1.04,window.outerWidth*vw/100*1.02)
