@@ -5,6 +5,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js'
 import {gsap} from "gsap"
 import {onMounted, useTemplateRef} from "vue"
 import { LoadingManager } from "three"
+import { loadCharAnim, loadCharSkm } from "../../functions/char"
 
 const scene = new THREE.Scene()
 const canvas = useTemplateRef("canvasDom")
@@ -21,6 +22,7 @@ const loadingManager = new LoadingManager()
 const modelLoader = new FBXLoader(loadingManager)
 
 const naoto = {
+    mesh: null,
     skm: null,
     animClips: {
         run: null
@@ -33,25 +35,18 @@ const naoto = {
 
 onMounted(() => {
     renderer = new THREE.WebGLRenderer({antialias:true,canvas:canvas.value})
-
     renderer.setSize(window.innerWidth/2, window.innerWidth/2)
-    modelLoader.load("/src/assets/char/Naoto_anim_run.fbx", (loaded) => {
-        naoto.animClips.run = loaded.animations[0]
-        for (const track of naoto.animClips.run.tracks) {
-            track.setInterpolation(THREE.InterpolateDiscrete)
-        }
-    })
-    modelLoader.load("/src/assets/char/Naoto_skm.fbx", (loaded) => {
-        naoto.mesh = loaded
-        
-        naoto.mesh.children[0].material = new THREE.MeshStandardMaterial({color: 0xffffff})
+    
+    loadCharSkm("Naoto", naoto, modelLoader)
+    loadCharAnim("Naoto", "run", naoto, modelLoader)
 
-        scene.add(naoto.mesh)
-    })
     loadingManager.onLoad = () => {
+        console.log(naoto)
+        naoto.skm.material = new THREE.MeshStandardMaterial({color: 0xffffff})
+        scene.add(naoto.mesh)
+
         naoto.mixer = new THREE.AnimationMixer(naoto.mesh)
         naoto.animActions.run = naoto.mixer.clipAction(naoto.animClips.run)
-        
 
         naoto.animActions.run.play()
         animTick()
