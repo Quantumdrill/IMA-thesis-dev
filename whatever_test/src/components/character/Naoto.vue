@@ -3,9 +3,11 @@
 import * as THREE from "three"
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js'
 import {gsap} from "gsap"
+import MotionPathPlugin from "gsap/MotionPathPlugin"
+gsap.registerPlugin(MotionPathPlugin)
 import {onMounted, useTemplateRef} from "vue"
 import { LoadingManager } from "three"
-import { loadCharAnim, loadCharSkm, animTransition, charMove } from "../../functions/char"
+import { loadCharAnim, loadCharSkm, animTransition, charMove, charMoveDuration } from "../../functions/char"
 
 const scene = new THREE.Scene()
 const canvas = useTemplateRef("canvasDom")
@@ -57,6 +59,7 @@ onMounted(() => {
     loadCharSkm("Naoto", naoto, modelLoader)
     loadCharAnim("Naoto", "run", naoto, modelLoader)
     loadCharAnim("Naoto", "idle", naoto, modelLoader)
+    loadCharAnim("Naoto", "leap", naoto, modelLoader)
 
     loadingManager.onLoad = () => {
         naoto.skm.material = new THREE.MeshLambertMaterial({color: 0xffffff})
@@ -67,11 +70,24 @@ onMounted(() => {
         naoto.mixer = new THREE.AnimationMixer(naoto.mesh)
         naoto.animActions.run = naoto.mixer.clipAction(naoto.animClips.run)
         naoto.animActions.idle = naoto.mixer.clipAction(naoto.animClips.idle)
+        naoto.animActions.leap = naoto.mixer.clipAction(naoto.animClips.leap)
+        naoto.animActions.run.loop = THREE.LoopOnce
 
         naoto.animActions.idle.play()
         window.addEventListener("click", (e) => {
-            charMove(naoto, 80, 0)
-            animTransition(naoto, naoto.currentAnim, "run")
+            let tl = gsap.timeline()
+            tl.call(() => {
+                charMove(naoto, "run", 20, 0)
+                console.log(1)
+            })
+            tl.call(() => {
+                charMove(naoto, "leap", 20, 0, true)
+                console.log(2)
+            }, [], `+=${charMoveDuration(naoto, "run", 20, 0)}`)
+            tl.call(() => {
+                charMove(naoto, "run", 20, 0)
+                console.log(3)
+            }, [], `+=${charMoveDuration(naoto, "leap", 20, 0, true)}`)
         })
         animTick()
     }
