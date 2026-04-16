@@ -26,7 +26,7 @@ const bridges = {
 const nextButton = useTemplateRef("nextButton")
     
 let popups = []
-let popupID = 0
+let popupID = {value: 0}
 let chan
 
 onMounted(() => {

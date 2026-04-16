@@ -1,10 +1,10 @@
 // requires creation of the popups array, bridges object and the popupIndex var
 
-export function openPopup(popupID,popups,left,top,vw){
+export function openPopup(popupID,left,top,vw){
     let newWindow
     newWindow = window.open(
-        `/popupSquare/${popupID}`, 
-        `bridge${popupID}`,  //provide different names to open multiple popups
+        `/popupSquare/${popupID.value}`, 
+        `popup${popupID.value}`,  //provide different names to open multiple popups
         `left=${left},top=${top},width=500,height=500`
     )
     newWindow.resizeTo(window.outerWidth*vw/100*1.04,window.outerWidth*vw/100*1.02)
@@ -13,13 +13,15 @@ export function openPopup(popupID,popups,left,top,vw){
 
 export function popupNewInstance(popupID,popups,popupTick){
     let newPopup = {
-        window: openPopup(popupID,popups,500,200,15),
+        window: openPopup(popupID,500,200,15),
         locked: false,
         inPos: false,
         inPosPrev: false,
-        id: popupID
+        id: popupID.value
     }
-    popupID += 1
+    console.log(newPopup.id)
+    popupID.value += 1
+    
     popups.push(newPopup)
     if (popups.length===1){
         requestAnimationFrame(popupTick)
