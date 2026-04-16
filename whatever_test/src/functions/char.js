@@ -18,18 +18,18 @@ export function loadCharSkm(charname, charObj, modelLoader){
     })
 }
 
-export function animTransition(charObj, newAnimName, duration=0.25){
+export function animTransition(charObj, newAnimName, duration=2){
     let currentAnim = charObj.animActions[charObj.currentAnim]
     let newAnim = charObj.animActions[newAnimName]
     newAnim.reset()
     newAnim.play()
-    currentAnim.crossFadeTo(newAnim, duration)
+    currentAnim.crossFadeTo(newAnim, duration*0.125)
     setTimeout(() => {
         charObj.currentAnim = newAnimName
-    }, duration*1000)
+    }, duration*0.125*1000)
 }
 
-export function charMove(charObj, newAnimName, displacementX, displacementY, parabola=false){
+export function charMove(charObj, newAnimName, displacementX, displacementY, parabola=false, transitionFrame=2){
     const unitToVw = 50/8
     let speed = 24
     let realDisplacementX = displacementX*unitToVw
@@ -70,10 +70,10 @@ export function charMove(charObj, newAnimName, displacementX, displacementY, par
             ease: "none"
         })
     }
-    animTransition(charObj, newAnimName)
+    animTransition(charObj, newAnimName, transitionFrame)
 }
 
-export function charMoveDuration(charObj, newAnimName, displacementX, displacementY, parabola=false){
+export function charMoveDuration(charObj, newAnimName, displacementX, displacementY, parabola=false, transitionFrame=2){
     let speed = 24
     let duration
     if (newAnimName === "leap"){

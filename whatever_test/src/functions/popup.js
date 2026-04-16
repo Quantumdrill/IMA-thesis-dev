@@ -11,26 +11,32 @@ export function openPopup(popupID,left,top,vw){
     return newWindow
 }
 
-export function popupNewInstance(popupID,popups,popupTick){
-    let newPopup = {
-        window: openPopup(popupID,500,200,15),
-        locked: false,
-        inPos: false,
-        inPosPrev: false,
-        id: popupID.value
-    }
-    popupID.value += 1
-    
-    popups.push(newPopup)
-    if (popups.length===1){
-        requestAnimationFrame(popupTick)
+export function popupNewInstance(popupID,popups,popupTick,availableBridges){
+    if (availableBridges.value>0){
+        availableBridges.value -= 1
+        let newPopup = {
+            window: openPopup(popupID,500,200,15),
+            locked: false,
+            inPos: false,
+            inShape: false,
+            inPosPrev: false,
+            inShapePrev: false,
+            id: popupID.value
+        }
+        popupID.value += 1
+        
+        popups.push(newPopup)
+        if (popups.length===1){
+            requestAnimationFrame(popupTick)
+        }
     }
 }
 
-export function popupFixSize(popupWin,vw){
-    let sideSizePixel = window.outerWidth*vw/100
-    if (popupWin.outerWidth!==sideSizePixel||popupWin.outerHeight!==sideSizePixel){
-        popupWin.resizeTo(sideSizePixel*1.04,sideSizePixel*1.02)
+export function popupFixSize(popupWin,vwX,vwY){
+    let targetWidthInPx = window.outerWidth*vwX/100
+    let targetHeightInPx = window.outerWidth*vwY/100
+    if (popupWin.outerWidth!==targetWidthInPx||popupWin.outerHeight!==targetHeightInPx){
+        popupWin.resizeTo(targetWidthInPx*1.04,targetHeightInPx*1.02)
     }
 }
 
@@ -40,14 +46,19 @@ export function popupFixPosition(popupWin,x,y){
     }
 }
 
-export function popupSnapCheck(popupObj,bridges){
-
+export function popupSnapCheck(popupObj,bridges,toleranceX=100,toleranceY=100,offsetX=0,offsetY=0){
+    //tolerance in px, offset in vw
+    let offsetXInPx = offsetX*window.innerWidth/100
+    let offsetYInPx = offsetY*window.innerWidth/100
+    
     popupObj.inPos = false
-    popupObj.occupyingBridge = "null"
+    if (!popupObj.locked){
+        popupObj.occupyingBridge = "null" // refresh occyping bridge to null every frame if the popup is not locked
+    }
 
     // iterate through bridges and check if the popup is in position
     for (const [key, value] of Object.entries(bridges)) {
-        if (Math.abs(popupObj.window.screenX-value.xPos)<100&&Math.abs(popupObj.window.screenY-value.yPos)<100){ // check if in position
+        if (Math.abs(popupObj.window.screenX-offsetXInPx-value.xPos)<toleranceX&&Math.abs(popupObj.window.screenY-offsetYInPx-value.yPos)<toleranceY){ // check if in position
             if (!value.occupied) { //check if the space is occupied
                 popupObj.inPos = true
                 popupObj.lockedPositionX = value.xPos-5
@@ -59,11 +70,22 @@ export function popupSnapCheck(popupObj,bridges){
     }
 }
 
-export function popupCloseCheck(popupObj,popups,popupsArrIndex,bridges){
+export function popupShapeCheck(popupObj,targetWidth,targetHeight){
+    let targetWidthInPx = targetWidth*window.innerWidth/100
+    let targetHeightInPx = targetHeight*window.innerWidth/100
+    if (Math.abs(popupObj.window.outerWidth-targetWidthInPx)<100&&Math.abs(popupObj.window.outerHeight-targetHeightInPx)<100){
+        popupObj.inShape = true
+    } else {
+        popupObj.inShape = false
+    }
+}
+
+export function popupCloseCheck(popupObj,popups,popupsArrIndex,bridges,availableBridges){
     if (popupObj.window.closed){
-        popups.splice(popupsArrIndex,1) //remove the popup from the array if it is closed
+        availableBridges.value += 1
         bridges[popupObj.occupyingBridge].highlight = false //when the popup is closed, restore the occupying status of the occupied bridge
         bridges[popupObj.occupyingBridge].occupied = false //when the popup is closed, restore the occupying status of the occupied bridge
+        popups.splice(popupsArrIndex,1) //remove the popup from the array if it is closed
     }
 }
 

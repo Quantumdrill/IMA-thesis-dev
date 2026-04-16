@@ -1,5 +1,5 @@
 <script setup>
-import {ref, onMounted, useTemplateRef} from "vue"
+import {ref, onMounted, useTemplateRef, reactive, watch} from "vue"
 import {useRouter} from "vue-router"
 import { popupNewInstance, popupFixSize, popupFixPosition, popupSnapCheck, popupCloseCheck, bridgeCheck } from "../../functions/popup"
 import Naoto from "../character/Naoto.vue"
@@ -21,10 +21,12 @@ const bridges = {
         occupied: false,
         xPos: window.innerWidth*52.5/100,
         yPos: window.innerHeight*38/100+browserTopHeight
-    },
+    }
 }
+let availableBridges = reactive({value: 2})
 const nextButton = useTemplateRef("nextButton")
-const nextLevel = ref(false)
+const popupButton = useTemplateRef("popupButton")
+const animSequence = ref(null)
 let popups = []
 let popupID = {value: 0}
 let chan
@@ -33,9 +35,10 @@ onMounted(() => {
     for (let i=0;i<popups.length;i++){
         popups[i].window.close()
     }
+    nextButton.value.disabled = true
 
     chan = new BroadcastChannel("global")
-    chan.onmessage=(e)=>{
+    chan.onmessage=(e)=>{ //snap popup on message
         if (e.data.type==="snapButtonAction"){
             let popup
             popups.forEach(elem=>{
@@ -47,7 +50,15 @@ onMounted(() => {
             popup.locked = true
         }
     }
-    nextButton.value.disabled = true
+    
+    watch(availableBridges, (e)=>{
+        if (availableBridges.value===0){
+            popupButton.value.disabled = true
+        } else {
+            popupButton.value.disabled = false
+        }
+    })
+
 })
 
 
@@ -58,17 +69,17 @@ function popupTick(){
 
     // disable dashed border highlight every frame before snap check
     // can't iterate through popups because the each popup's snap check will overwrite the status of the previous popup snap check
-    bridges.left.highlight = false 
-    bridges.right.highlight = false
+    for (const [key, value] of Object.entries(bridges)) {
+        value.highlight = false
+    }
 
     //iterate for all opened popups
     popups.forEach((elem,i)=>{ 
-        let popup = popups[i]
         if (document.hasFocus()){
             elem.window.focus()
         }
-        popupCloseCheck(elem,popups,i,bridges)
-        popupFixSize(elem.window,15)
+        popupCloseCheck(elem,popups,i,bridges,availableBridges)
+        popupFixSize(elem.window,15,15)
         if (elem.locked){
             popupFixPosition(elem.window,elem.lockedPositionX,elem.lockedPositionY)
         }
@@ -87,20 +98,18 @@ function popupTick(){
 
     bridgeHighlightUpdate()
     if (bridgeCheck(bridges)){
-        nextLevel.value = true
+        animSequence.value = "stage21NextLevel"
     }
     requestAnimationFrame(popupTick)
 }
 
 
 function bridgeHighlightUpdate(){ // update after snap check
-    bridges.left.dom.value.style.borderStyle = "hidden" //erase the dashed borders every frame before checking highlight status
-    bridges.right.dom.value.style.borderStyle = "hidden"
-    if (bridges.left.highlight){
-        bridges.left.dom.value.style.borderStyle = "dashed"
-    }
-    if (bridges.right.highlight){
-        bridges.right.dom.value.style.borderStyle = "dashed"
+    for (const [key, value] of Object.entries(bridges)) { 
+        value.dom.value.style.borderStyle = "hidden" //erase the dashed borders every frame before checking highlight status
+        if (value.highlight){ //add dashed border if the bridge is highlighted
+            value.dom.value.style.borderStyle = "dashed"
+        }
     }
 }
 
@@ -115,14 +124,14 @@ function nextButtonAction(){
 
 <template>
     <div id="body">
-        <button id="popupButton" @click="popupNewInstance(popupID,popups,popupTick)">Create a popup window</button>
+        <button id="popupButton" @click="popupNewInstance(popupID,popups,popupTick,availableBridges)" ref="popupButton">Create a popup window, {{ availableBridges.value }} available</button>
         <div class="block" id="leftPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
         <div class="block" id="leftBridge" ref="bridgesLeftDom"></div>
         <div class="block" id="rightBridge" ref="bridgesRightDom"></div>
         <button id="nextButton" @click="nextButtonAction" ref="nextButton">next</button>
         <div class="block" id="rightPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
     </div>
-    <Naoto id="naoto" :nextLevelProp="nextLevel" @nextButtonActivated="nextButton.disabled = false" />
+    <Naoto id="naoto" :parentComponent="'stage21'" :animSequenceProp="animSequence" @nextButtonActivated="nextButton.disabled = false" />
 </template>
 
 

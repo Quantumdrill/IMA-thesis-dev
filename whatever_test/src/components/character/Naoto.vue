@@ -13,7 +13,7 @@ const scene = new THREE.Scene()
 const canvas = useTemplateRef("canvasDom")
 let renderer
 const scrnRatio = window.innerWidth/window.innerHeight
-const props = defineProps(["nextLevelProp"])
+const props = defineProps(["animSequenceProp", "parentComponent"])
 const emit = defineEmits(["nextButtonActivated"])
 
 //fps
@@ -22,7 +22,7 @@ let accumulatedDelta = 0
 const clock = new THREE.Timer()
 
 //camera
-const camZoomFactor = 5.5 
+const camZoomFactor = window.innerWidth*0.0027
 const cam = new THREE.OrthographicCamera(-window.innerWidth/camZoomFactor,window.innerWidth/camZoomFactor,window.innerHeight/camZoomFactor,-window.innerHeight/camZoomFactor,0.01,1000)
 cam.position.set(0,0,50)
 
@@ -67,8 +67,8 @@ onMounted(() => {
     loadingManager.onLoad = () => {
         naoto.skm.material = new THREE.MeshLambertMaterial({color: 0xffffff})
         scene.add(naoto.mesh)
-        naoto.mesh.rotation.y = Math.PI/2
-        naoto.mesh.position.set(-45*unitToVw,-6*unitToVw/scrnRatio,0)
+        
+        naotoCharInitialization()
 
         naoto.mixer = new THREE.AnimationMixer(naoto.mesh)
         for (const anim of animArr){
@@ -77,8 +77,8 @@ onMounted(() => {
         naoto.animActions.leap.loop = THREE.LoopOnce
 
         naoto.animActions.idle.play()
-        watch(()=>props.nextLevelProp, () => {
-            naotoStage21NextLevel()
+        watch(()=>props.animSequenceProp, () => {
+            naotoAnimSequences[props.animSequenceProp]()
         })
         animTick()
     }
@@ -101,31 +101,48 @@ function animTick(){
     requestAnimationFrame(animTick)
 }
 
-function naotoStage21NextLevel(){
-    if (props.nextLevelProp&&!naoto.animPlaying){
-        let tl = gsap.timeline()
-        naoto.animPlaying = true
-        props.nextLevelProp = false
-        tl.call(() => {
-            charMove(naoto, "run", 16, 0)
-        }, [], "+=0.5")
-        tl.call(() => {
-            charMove(naoto, "leap", 18, 8/scrnRatio, true)
-        }, [], `+=${charMoveDuration(naoto, "run", 16, 0)}`)
-        tl.call(() => {
-            charMove(naoto, "leap", 20, 10/scrnRatio, true)
-        }, [], `+=${charMoveDuration(naoto, "leap", 16, 8/scrnRatio, true)}`)
-        tl.call(() => {
-            charMove(naoto, "leap", 20, 10/scrnRatio, true)
-        }, [], `+=${charMoveDuration(naoto, "leap", 20, 8/scrnRatio, true)}`)
-        tl.call(() => {
-            charMove(naoto, "run", 10, 0)
-        }, [], `+=${charMoveDuration(naoto, "leap", 20, 8/scrnRatio, true)}`)
-        tl.call(() => {
-            charMove(naoto, "idle", 0, 0)
-            naoto.animPlaying = false
-            emit("nextButtonActivated")
-        }, [], `+=${charMoveDuration(naoto, "run", 10, 0)}`)
+function naotoCharInitialization(){
+    switch (props.parentComponent){
+        case "stage21":
+            naoto.mesh.rotation.y = Math.PI/2   
+            naoto.mesh.position.set(-45*unitToVw,-6*unitToVw/scrnRatio,0)
+            break
+        case "stage22":
+            naoto.mesh.rotation.y = Math.PI/2   
+            naoto.mesh.position.set(-45*unitToVw,-6*unitToVw/scrnRatio,0)
+            break
+        default:
+            break
+    }
+}
+
+const naotoAnimSequences = {
+    stage21NextLevel: ()=>{
+        if (props.animSequenceProp==="stage21NextLevel"&&!naoto.animPlaying){
+            let tl = gsap.timeline()
+            naoto.animPlaying = true
+            props.animSequenceProp = null
+            tl.call(() => {
+                charMove(naoto, "run", 16, 0)
+            }, [], "+=0.5")
+            tl.call(() => {
+                charMove(naoto, "leap", 18, 7/scrnRatio, true, 1)
+            }, [], `+=${charMoveDuration(naoto, "run", 16, 0)}`)
+            tl.call(() => {
+                charMove(naoto, "leap", 22, 12/scrnRatio, true, 1)
+            }, [], `+=${charMoveDuration(naoto, "leap", 16, 8/scrnRatio, true)}`)
+            tl.call(() => {
+                charMove(naoto, "leap", 20, 10/scrnRatio, true, 1)
+            }, [], `+=${charMoveDuration(naoto, "leap", 20, 8/scrnRatio, true)}`)
+            tl.call(() => {
+                charMove(naoto, "run", 10, 0)
+            }, [], `+=${charMoveDuration(naoto, "leap", 20, 8/scrnRatio, true)}`)
+            tl.call(() => {
+                charMove(naoto, "idle", 0, 0)
+                naoto.animPlaying = false
+                emit("nextButtonActivated")
+            }, [], `+=${charMoveDuration(naoto, "run", 10, 0)}`)
+        }
     }
 }
 
