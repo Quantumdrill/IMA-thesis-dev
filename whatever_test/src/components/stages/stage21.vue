@@ -1,8 +1,8 @@
 <script setup>
 import {ref, onMounted, useTemplateRef} from "vue"
 import {useRouter} from "vue-router"
-import { popupNewInstance, popupFixSize, popupFixPosition, popupSnapCheck, popupCloseCheck } from "../../functions/popup"
-
+import { popupNewInstance, popupFixSize, popupFixPosition, popupSnapCheck, popupCloseCheck, bridgeCheck } from "../../functions/popup"
+import Naoto from "../character/Naoto.vue"
 
 let router = useRouter()
 let lorumPlaceholder = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum"
@@ -24,12 +24,16 @@ const bridges = {
     },
 }
 const nextButton = useTemplateRef("nextButton")
-    
+const nextLevel = ref(false)
 let popups = []
 let popupID = {value: 0}
 let chan
 
 onMounted(() => {
+    for (let i=0;i<popups.length;i++){
+        popups[i].window.close()
+    }
+
     chan = new BroadcastChannel("global")
     chan.onmessage=(e)=>{
         if (e.data.type==="snapButtonAction"){
@@ -43,7 +47,7 @@ onMounted(() => {
             popup.locked = true
         }
     }
-    // nextButton.value.disabled = true
+    nextButton.value.disabled = true
 })
 
 
@@ -57,7 +61,8 @@ function popupTick(){
     bridges.left.highlight = false 
     bridges.right.highlight = false
 
-    popups.forEach((elem,i)=>{ //iterate for all opened popups
+    //iterate for all opened popups
+    popups.forEach((elem,i)=>{ 
         let popup = popups[i]
         if (document.hasFocus()){
             elem.window.focus()
@@ -79,7 +84,11 @@ function popupTick(){
         }
         elem.inPosPrev = elem.inPos
     })
+
     bridgeHighlightUpdate()
+    if (bridgeCheck(bridges)){
+        nextLevel.value = true
+    }
     requestAnimationFrame(popupTick)
 }
 
@@ -113,6 +122,7 @@ function nextButtonAction(){
         <button id="nextButton" @click="nextButtonAction" ref="nextButton">next</button>
         <div class="block" id="rightPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
     </div>
+    <Naoto id="naoto" :nextLevelProp="nextLevel" @nextButtonActivated="nextButton.disabled = false" />
 </template>
 
 
@@ -120,10 +130,6 @@ function nextButtonAction(){
 <style scoped>
 #body {
     position: relative;
-}
-
-.block{
-    /* background-color: rgb(111, 129, 209); */
 }
 
 #leftPlatform{
@@ -180,5 +186,10 @@ function nextButtonAction(){
 
 #nextButton:disabled {
     color: #aaa;
+}
+
+#naoto{
+    position: fixed;
+    z-index: -2;
 }
 </style>

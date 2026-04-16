@@ -21,8 +21,17 @@ function snapInPlace(){
 
 </script>
 <template>
-    <button v-if="disp&&!locked" @click="snapInPlace()">Snap in place</button> 
+    <div id="buttonContainer">
+        <button v-if="disp&&!locked" @click="snapInPlace()">Snap in place</button> 
+    </div>
 </template>
 <style scoped>
-
+    #buttonContainer{
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 </style>

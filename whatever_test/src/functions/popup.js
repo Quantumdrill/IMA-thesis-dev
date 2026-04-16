@@ -19,7 +19,6 @@ export function popupNewInstance(popupID,popups,popupTick){
         inPosPrev: false,
         id: popupID.value
     }
-    console.log(newPopup.id)
     popupID.value += 1
     
     popups.push(newPopup)
@@ -64,5 +63,10 @@ export function popupCloseCheck(popupObj,popups,popupsArrIndex,bridges){
     if (popupObj.window.closed){
         popups.splice(popupsArrIndex,1) //remove the popup from the array if it is closed
         bridges[popupObj.occupyingBridge].highlight = false //when the popup is closed, restore the occupying status of the occupied bridge
+        bridges[popupObj.occupyingBridge].occupied = false //when the popup is closed, restore the occupying status of the occupied bridge
     }
+}
+
+export function bridgeCheck(bridges){ // return true if all bridges are occupied
+    return Object.values(bridges).every(bridge=>bridge.occupied)
 }

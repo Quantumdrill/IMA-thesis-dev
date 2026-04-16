@@ -36,7 +36,7 @@ export function charMove(charObj, newAnimName, displacementX, displacementY, par
     let realDisplacementY = displacementY*unitToVw
     let duration
     if (newAnimName === "leap"){
-        duration = 10*0.125
+        duration = 11*0.125
     } else {
         duration = displacementX/speed
     }
@@ -44,9 +44,9 @@ export function charMove(charObj, newAnimName, displacementX, displacementY, par
     let realHighPointY
     if (parabola){
         if (displacementY > 0){
-            realHighPointY = (displacementY+5)*unitToVw
+            realHighPointY = (displacementY+3)*unitToVw
         } else {
-            realHighPointY = 5*unitToVw
+            realHighPointY = 3*unitToVw
         }
         realHighPointX = (displacementX/2+Math.atan(displacementY)/(Math.PI/4))*unitToVw
         gsap.to(charObj.mesh.position, {
@@ -59,7 +59,8 @@ export function charMove(charObj, newAnimName, displacementX, displacementY, par
                 type: "thru",
                 relative: true,
                 fromCurrent: true
-            }
+            },
+            ease: "none"
         })
     } else {
         gsap.to(charObj.mesh.position, {
@@ -76,7 +77,7 @@ export function charMoveDuration(charObj, newAnimName, displacementX, displaceme
     let speed = 24
     let duration
     if (newAnimName === "leap"){
-        duration = 10*0.125
+        duration = 11*0.125
     } else {
         duration = displacementX/speed
     }
