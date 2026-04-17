@@ -3,7 +3,7 @@
 </script>
 <template>
     <div id="resetScreenContainer">
-        <div id="resetScreenText">Refresh page to reset</div>
+        <div id="resetScreenText">Refresh page to reset this level</div>
     </div>
 </template>
 <style scoped>

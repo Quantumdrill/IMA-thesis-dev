@@ -113,7 +113,7 @@ function nextButtonAction(){
 
 #initBPlatform{
     position: fixed;
-    width: 20vw;
+    width: 18vw;
     height: 10vh;
     left: 5vw;
     top: 20vh;
@@ -147,7 +147,7 @@ function nextButtonAction(){
     position: fixed;
     width: 18vw;
     height: 45vh;
-    left: 42vw;
+    left: 44vw;
     bottom: 5vh;
     overflow: hidden;
 }
@@ -163,7 +163,7 @@ function nextButtonAction(){
 
 #leftLowerWPlatform{
     position: fixed;
-    width: 17vw;
+    width: 19vw;
     height: 10vh;
     left: 25vw;
     bottom: 5vh;
