@@ -199,7 +199,7 @@ const naotoAnimSequences = {
                 charMove(naoto, "run", 10, 0)
             }, [], `+=${charMoveDuration(naoto, "point", 0, 0)}`)
             tl.call(() => {
-                charMove(naoto, "leap", 32, 0)
+                charMove(naoto, "leap", 34, 0)
             }, [], `+=${charMoveDuration(naoto, "run", 10, 0)}`)
             tl.call(() => {
                 if (naoto.localVars.stage24Appearance){
@@ -268,9 +268,11 @@ const naotoAnimSequences = {
             }, [], `+=0.5`)
             tl.call(() => {
                 if (naoto.localVars.stage24Appearance){
-                    charMove(naoto, "idle", 0, 0)
-                    emit("nextButtonActivated")
-                    naoto.animPlaying = false // end of sequence
+                    tl.call(() => {
+                        charMove(naoto, "idle", 0, 0)
+                        emit("nextButtonActivated")
+                        naoto.animPlaying = false // end of sequence
+                    }, [], `+=0.25`)
                 } else {
                     charMove(naoto, "drop", -20, -20, false, 4)
                     tl.call(() => {
