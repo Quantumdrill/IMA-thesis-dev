@@ -13,8 +13,8 @@ const scene = new THREE.Scene()
 const canvas = useTemplateRef("canvasDom")
 let renderer
 const scrnRatio = window.innerWidth/window.innerHeight
-const props = defineProps(["animSequenceProp", "parentComponent"])
-const emit = defineEmits(["nextButtonActivated"])
+const props = defineProps(["animSequenceProp", "parentComponent", "naotoLocalVarsProp"])
+const emit = defineEmits(["nextButtonActivated", "naotoPosUpdate", "operationButtonOperation"])
 
 //fps
 const fps = 8
@@ -22,7 +22,7 @@ let accumulatedDelta = 0
 const clock = new THREE.Timer()
 
 //camera
-const camZoomFactor = window.innerWidth*0.0027
+const camZoomFactor = window.innerWidth*0.0032
 const cam = new THREE.OrthographicCamera(-window.innerWidth/camZoomFactor,window.innerWidth/camZoomFactor,window.innerHeight/camZoomFactor,-window.innerHeight/camZoomFactor,0.01,1000)
 cam.position.set(0,0,50)
 
@@ -49,9 +49,12 @@ const naoto = {
     mixer: null,
     currentAnim: "idle",
     animPlaying: false,
+    localVars: {
+        stage24Appearance: false,
+    }
 }
 const unitToVw = 50/8 // height of naoto is 8vw, and 50 units, so 50/8 = 6.25 units per vw
-const animArr = ["run", "idle", "leap"]
+const animArr = ["run", "idle", "leap", "drop", "point", "turn"]
 
 
 onMounted(() => {
@@ -105,11 +108,15 @@ function naotoCharInitialization(){
     switch (props.parentComponent){
         case "stage21":
             naoto.mesh.rotation.y = Math.PI/2   
-            naoto.mesh.position.set(-45*unitToVw,-6*unitToVw/scrnRatio,0)
+            naoto.mesh.position.set(-36*unitToVw,-5*unitToVw/scrnRatio,0)
             break
         case "stage22":
             naoto.mesh.rotation.y = Math.PI/2   
-            naoto.mesh.position.set(-45*unitToVw,-6*unitToVw/scrnRatio,0)
+            naoto.mesh.position.set(-36*unitToVw,-5*unitToVw/scrnRatio,0)
+            break
+        case "stage24":
+            naoto.mesh.rotation.y = Math.PI/2   
+            naoto.mesh.position.set(-40*unitToVw,30*unitToVw/scrnRatio,0)
             break
         default:
             break
@@ -118,31 +125,163 @@ function naotoCharInitialization(){
 
 const naotoAnimSequences = {
     stage21NextLevel: ()=>{
-        if (props.animSequenceProp==="stage21NextLevel"&&!naoto.animPlaying){
+        if (!naoto.animPlaying){
             let tl = gsap.timeline()
             naoto.animPlaying = true
             props.animSequenceProp = null
             tl.call(() => {
-                charMove(naoto, "run", 16, 0)
+                charMove(naoto, "run", 8, 0)
             }, [], "+=0.5")
             tl.call(() => {
                 charMove(naoto, "leap", 18, 7/scrnRatio, true, 1)
-            }, [], `+=${charMoveDuration(naoto, "run", 16, 0)}`)
-            tl.call(() => {
-                charMove(naoto, "leap", 22, 12/scrnRatio, true, 1)
-            }, [], `+=${charMoveDuration(naoto, "leap", 16, 8/scrnRatio, true)}`)
+            }, [], `+=${charMoveDuration(naoto, "run", 8, 0)}`)
             tl.call(() => {
                 charMove(naoto, "leap", 20, 10/scrnRatio, true, 1)
+            }, [], `+=${charMoveDuration(naoto, "leap", 18, 8/scrnRatio, true)}`)
+            tl.call(() => {
+                charMove(naoto, "leap", 18, 8/scrnRatio, true, 1)
             }, [], `+=${charMoveDuration(naoto, "leap", 20, 8/scrnRatio, true)}`)
             tl.call(() => {
-                charMove(naoto, "run", 10, 0)
+                charMove(naoto, "run", 6, 0)
+            }, [], `+=${charMoveDuration(naoto, "leap", 18, 8/scrnRatio, true)}`)
+            tl.call(() => {
+                charMove(naoto, "idle", 0, 0)
+                naoto.animPlaying = false
+                emit("nextButtonActivated")
+            }, [], `+=${charMoveDuration(naoto, "run", 8, 0)}`)
+        }
+    },
+    stage22NextLevel: ()=>{
+        if (!naoto.animPlaying){
+            let tl = gsap.timeline()
+            naoto.animPlaying = true
+            props.animSequenceProp = null
+            tl.call(() => {
+                charMove(naoto, "run", 8, 0)
+            }, [], "+=0.5")
+            tl.call(() => {
+                charMove(naoto, "leap", 18, 0/scrnRatio, true, 1)
+            }, [], `+=${charMoveDuration(naoto, "run", 8, 0)}`)
+            tl.call(() => {
+                charMove(naoto, "run", 20, 0)
+            }, [], `+=${charMoveDuration(naoto, "leap", 20, 8/scrnRatio, true)}`)
+            tl.call(() => {
+                charMove(naoto, "leap", 20, 0/scrnRatio, true, 1)
+            }, [], `+=${charMoveDuration(naoto, "run", 20, 0)}`)
+            tl.call(() => {
+                charMove(naoto, "run", 6, 0)
             }, [], `+=${charMoveDuration(naoto, "leap", 20, 8/scrnRatio, true)}`)
             tl.call(() => {
                 charMove(naoto, "idle", 0, 0)
                 naoto.animPlaying = false
                 emit("nextButtonActivated")
-            }, [], `+=${charMoveDuration(naoto, "run", 10, 0)}`)
+            }, [], `+=${charMoveDuration(naoto, "run", 8, 0)}`)
         }
+    },
+    stage24InitDrop: ()=>{
+        if (!naoto.animPlaying){
+            let tl = gsap.timeline()
+            naoto.animPlaying = true
+            props.animSequenceProp = null
+            emit("operationButtonOperation", false)
+            tl.call(() => {
+                charMove(naoto, "drop", 0, -30/scrnRatio)
+            }, [], "+=0")
+            tl.call(() => {
+                charMove(naoto, "idle", 0, 0)
+                emit("naotoPosUpdate", 2)
+            }, [], `+=${charMoveDuration(naoto, "drop", 0, -30/scrnRatio)}`)
+            tl.call(() => {
+                charMove(naoto, "point", 0, 0)
+            }, [], `+=0.5`)
+            tl.call(() => {
+                emit("operationButtonOperation", true)
+                charMove(naoto, "run", 10, 0)
+            }, [], `+=${charMoveDuration(naoto, "point", 0, 0)}`)
+            tl.call(() => {
+                charMove(naoto, "leap", 32, 0)
+            }, [], `+=${charMoveDuration(naoto, "run", 10, 0)}`)
+            tl.call(() => {
+                if (naoto.localVars.stage24Appearance){
+                    charMove(naoto, "leap", 30, 0)
+                    tl.call(() => {
+                        if (!naoto.localVars.stage24Appearance){
+                            emit("operationButtonOperation", false)
+                            charMove(naoto, "run", 8, 0)
+                            tl.call(() => {
+                                charMove(naoto, "idle", 0, 0)
+                            }, [], `+=${charMoveDuration(naoto, "run", 8, 0)}`)
+                            tl.call(() => {
+                                charMove(naoto, "turn", 0, 0)
+                            }, [], `+=0.2`)
+                            tl.call(() => {
+                                charMove(naoto, "idle", 0, 0)
+                                emit("operationButtonOperation", true)
+                                emit("naotoPosUpdate", 3)
+                                naoto.animPlaying = false // end of sequence
+                            }, [], `+=${charMoveDuration(naoto, "turn", 0, 0)}`)
+                            
+                        } else {
+                            charMove(naoto, "drop", 30, -40, false, 4)
+                            tl.call(() => {
+                                emit("resetScreen")
+                            }, [], `+=${charMoveDuration(naoto, "drop", 30, -40, false, 4)}`)
+                        }
+                    }, [], `+=${charMoveDuration(naoto, "leap", 30, 0)-0.25}`)
+                    
+                } else {
+                    charMove(naoto, "drop", 30, -40, false, 4)
+                    tl.call(() => {
+                        emit("resetScreen")
+                    }, [], `+=${charMoveDuration(naoto, "drop", 30, -40, false, 4)}`)
+                }
+            }, [], `+=${charMoveDuration(naoto, "leap", 30, 0)-0.25}`)
+        }
+    },
+    stage24SecondDrop: ()=>{
+        if (!naoto.animPlaying){
+            let tl = gsap.timeline()
+            naoto.animPlaying = true
+            props.animSequenceProp = null
+            emit("operationButtonOperation", false)
+            charMove(naoto, "drop", 0, -35/scrnRatio)
+            tl.call(() => {
+                charMove(naoto, "idle", 0, 0)
+                emit("naotoPosUpdate", 4)
+            }, [], `+=${charMoveDuration(naoto, "drop", 0, -35/scrnRatio)}`)
+            tl.call(() => {
+                charMove(naoto, "point", 0, 0)
+            }, [], `+=0.5`)
+            tl.call(() => {
+                charMove(naoto, "run", -8, 0)
+            }, [], `+=${charMoveDuration(naoto, "point", 0, 0)}`)
+            tl.call(() => {
+                emit("operationButtonOperation", true)
+                charMove(naoto, "leap", -46, 0)
+            }, [], `+=${charMoveDuration(naoto, "run", -8, 0)}`)
+            tl.call(() => {
+                if (naoto.localVars.stage24Appearance){
+                    console.log(naoto.localVars.stage24Appearance)
+                    canvas.value.style.display = "none"
+                    emit("resetScreen")
+                }
+            }, [], `+=0.5`)
+            tl.call(() => {
+                if (naoto.localVars.stage24Appearance){
+                    charMove(naoto, "idle", 0, 0)
+                    emit("nextButtonActivated")
+                    naoto.animPlaying = false // end of sequence
+                } else {
+                    charMove(naoto, "drop", -20, -20, false, 4)
+                    tl.call(() => {
+                        emit("resetScreen")
+                    }, [], `+=${charMoveDuration(naoto, "drop", 30, -40, false, 4)}`)
+                }
+            }, [], `+=${charMoveDuration(naoto, "leap", -48, 0)-0.75}`)
+        }
+    },
+    stage24AppearanceCheck: ()=>{
+        naoto.localVars.stage24Appearance = props.naotoLocalVarsProp.stage24Appearance
     }
 }
 

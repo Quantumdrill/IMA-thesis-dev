@@ -13,7 +13,7 @@ const bridges = {
         highlight: false,
         occupied: false,
         xPos: window.innerWidth*32/100, 
-        yPos: window.innerHeight*48/100+browserTopHeight
+        yPos: window.innerHeight*55/100+browserTopHeight
     },
 }
 let availableBridges = reactive({value: 1})
@@ -93,7 +93,7 @@ function popupTick(){
 
     bridgeHighlightUpdate()
     if (bridgeCheck(bridges)){
-        animSequence.value = "stage21NextLevel"
+        animSequence.value = "stage22NextLevel"
     }
     requestAnimationFrame(popupTick)
 }
@@ -112,7 +112,7 @@ function nextButtonAction(){
     for (let i=0;i<popups.length;i++){
         popups[i].window.close()
     }
-    router.push('/stage23')
+    router.push('/stage24')
 }
 
 </script>
@@ -125,7 +125,7 @@ function nextButtonAction(){
         <button id="nextButton" @click="nextButtonAction" ref="nextButton">next</button>
         <div class="block" id="rightPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
     </div>
-    <Naoto id="naoto" :parentComponent="'stage21'" :animSequenceProp="animSequence" @nextButtonActivated="nextButton.disabled = false" />
+    <Naoto id="naoto" :parentComponent="'stage22'" :animSequenceProp="animSequence" @nextButtonActivated="nextButton.disabled = false" />
 </template>
 
 
@@ -149,7 +149,7 @@ function nextButtonAction(){
     width: 23vw;
     height: 35vh;
     right: 5vw;
-    top: 30vh;
+    bottom: 10vh;
     overflow: hidden;
 }
 
@@ -159,7 +159,7 @@ function nextButtonAction(){
     width: 36vw;
     height: 15vw;
     left: 32vw;
-    top: 48vh;
+    top: 55vh;
     border-style: hidden;
     border-width: 4px;
 }
@@ -173,7 +173,7 @@ function nextButtonAction(){
 #nextButton{
     position: fixed;
     right: 10vw;
-    top: 25vh;
+    top: 50vh;
 }
 
 #nextButton:disabled {
