@@ -33,7 +33,21 @@ export function animTransition(charObj, newAnimName, duration=2){
 
 export function charMove(charObj, newAnimName, displacementX, displacementY, parabola=false, transitionFrame=2, ease="none"){
     const unitToVw = 50/8
-    let speed = 24
+    let speed
+    switch (newAnimName){
+        case "run":
+            speed = 24
+            break
+        case "walk":
+            speed = 2.3
+            break
+        case "push":
+            speed = 2.3
+            break
+        default:
+            break
+    }
+    
     let realDisplacementX = displacementX*unitToVw
     let realDisplacementY = displacementY*unitToVw
     let duration = Math.abs(displacementX)/speed
@@ -96,7 +110,20 @@ export function charMove(charObj, newAnimName, displacementX, displacementY, par
 }
 
 export function charMoveDuration(charObj, newAnimName, displacementX, displacementY, parabola=false, transitionFrame=2){
-    let speed = 24
+    let speed
+    switch (newAnimName){
+        case "run":
+            speed = 24
+            break
+        case "walk":
+            speed = 2.3
+            break
+        case "push":
+            speed = 2.3
+            break
+        default:
+            break
+    }
     let duration = Math.abs(displacementX)/speed
     switch (newAnimName){
         case "leap":
@@ -110,6 +137,9 @@ export function charMoveDuration(charObj, newAnimName, displacementX, displaceme
             break
         case "turn":
             duration = 8*0.125
+            break
+        case "idea":
+            duration = 32*0.125
             break
         default:
             break

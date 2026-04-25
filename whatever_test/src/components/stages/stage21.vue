@@ -49,6 +49,9 @@ onMounted(() => {
             bridges[popup.occupyingBridge].occupied = true
             popup.locked = true
         }
+        if (e.data.type==="handshake"){
+            chan.postMessage({type:"typeInitialize",id:e.data.id,popupType:1})
+        }
     }
     
     watch(availableBridges, (e)=>{
@@ -124,7 +127,7 @@ function nextButtonAction(){
 
 <template>
     <div id="body">
-        <button id="popupButton" @click="popupNewInstance(popupID,popups,popupTick,availableBridges)" ref="popupButton">Create a popup window, {{ availableBridges.value }} available</button>
+        <button id="popupButton" @click="popupNewInstance(popupID,popups,500,200,15,popupTick,availableBridges,chan)" ref="popupButton">Create a popup window, {{ availableBridges.value }} available</button>
         <div class="block" id="leftPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
         <div class="block" id="leftBridge" ref="bridgesLeftDom"></div>
         <div class="block" id="rightBridge" ref="bridgesRightDom"></div>

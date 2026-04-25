@@ -3,7 +3,7 @@
 export function openPopup(popupID,left,top,vw){
     let newWindow
     newWindow = window.open(
-        `/popupSquare/${popupID.value}`, 
+        `/popups/${popupID.value}`, 
         `popup${popupID.value}`,  //provide different names to open multiple popups
         `left=${left},top=${top},width=500,height=500`
     )
@@ -11,11 +11,11 @@ export function openPopup(popupID,left,top,vw){
     return newWindow
 }
 
-export function popupNewInstance(popupID,popups,popupTick,availableBridges){
+export function popupNewInstance(popupID,popups,left,top,vw,popupTick,availableBridges,chan){
     if (availableBridges.value>0){
         availableBridges.value -= 1
         let newPopup = {
-            window: openPopup(popupID,500,200,15),
+            window: openPopup(popupID,left,top,vw),
             locked: false,
             inPos: false,
             inShape: false,
@@ -24,8 +24,10 @@ export function popupNewInstance(popupID,popups,popupTick,availableBridges){
             id: popupID.value
         }
         popupID.value += 1
-        
         popups.push(newPopup)
+        setTimeout(()=>{
+            chan.postMessage({popupType:2,id:newPopup.id})
+        },10)
         if (popups.length===1){
             requestAnimationFrame(popupTick)
         }

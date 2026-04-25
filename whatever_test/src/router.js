@@ -17,11 +17,12 @@ import stage82 from "./components/stages/stage82.vue"
 import stage83 from "./components/stages/stage83.vue"
 import stage9 from "./components/stages/stage9.vue"
 import endPage from "./components/stages/endPage.vue"
-import popupSquare from "./components/global/popupSquare.vue"
+import popups from "./components/global/popups.vue"
 import Naoto from "./components/character/Naoto.vue"
 
 const routes = [
   { path: "/", component: startPage },
+  { path: "/startPage", component: startPage },
   { path: "/stage1", component: stage1 },
   { path: "/stage21", component: stage21 },
   { path: "/stage22", component: stage22 },
@@ -39,7 +40,7 @@ const routes = [
   { path: "/stage83", component: stage83 },
   { path: "/stage9", component: stage9 },
   { path: "/endPage", component: endPage },
-  { path: "/popupSquare/:id", component: popupSquare },
+  { path: "/popups/:id", component: popups },
   { path: "/charTest", component: Naoto },
 ]
 

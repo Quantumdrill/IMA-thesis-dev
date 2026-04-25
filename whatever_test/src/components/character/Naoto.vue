@@ -14,7 +14,7 @@ const canvas = useTemplateRef("canvasDom")
 let renderer
 const scrnRatio = window.innerWidth/window.innerHeight
 const props = defineProps(["animSequenceProp", "parentComponent", "naotoLocalVarsProp"])
-const emit = defineEmits(["nextButtonActivated", "naotoPosUpdate", "operationButtonOperation"])
+const emit = defineEmits(["nextButtonActivated", "naotoPosUpdate", "operationButtonOperation", "popupPushedStateUpdate"])
 
 //fps
 const fps = 8
@@ -23,7 +23,7 @@ const clock = new THREE.Timer()
 
 //camera
 const camZoomFactor = window.innerWidth*0.0032
-const cam = new THREE.OrthographicCamera(-window.innerWidth/camZoomFactor,window.innerWidth/camZoomFactor,window.innerHeight/camZoomFactor,-window.innerHeight/camZoomFactor,0.01,1000)
+const cam = new THREE.OrthographicCamera(-window.innerWidth/camZoomFactor,window.innerWidth/camZoomFactor,window.innerHeight/camZoomFactor,-window.innerHeight/camZoomFactor,-1000,1000)
 cam.position.set(0,0,50)
 
 //lights
@@ -54,8 +54,8 @@ const naoto = {
     }
 }
 const unitToVw = 50/8 // height of naoto is 8vw, and 50 units, so 50/8 = 6.25 units per vw
-const animArr = ["run", "idle", "leap", "drop", "point", "turn"]
-
+const animArr = ["run", "idle", "leap", "drop", "point", "turn", "stage1", "idea", "push", "walk"]
+const animArrOnce = ["leap", "drop", "point", "turn", "stage1", "idea"] // animations that should only play once
 
 onMounted(() => {
     renderer = new THREE.WebGLRenderer({antialias:true,canvas:canvas.value,alpha: true})
@@ -77,7 +77,10 @@ onMounted(() => {
         for (const anim of animArr){
             naoto.animActions[anim] = naoto.mixer.clipAction(naoto.animClips[anim])
         }
-        naoto.animActions.leap.loop = THREE.LoopOnce
+        for (const anim of animArrOnce){
+            naoto.animActions[anim].loop = THREE.LoopOnce
+        }
+        naoto.animActions.stage1.clampWhenFinished = true
 
         naoto.animActions.idle.play()
         watch(()=>props.animSequenceProp, () => {
@@ -106,6 +109,9 @@ function animTick(){
 
 function naotoCharInitialization(){
     switch (props.parentComponent){
+        case "stage1": 
+            naoto.mesh.position.set(-52*unitToVw,-5*unitToVw/scrnRatio,0)
+            break
         case "stage21":
             naoto.mesh.rotation.y = Math.PI/2   
             naoto.mesh.position.set(-36*unitToVw,-5*unitToVw/scrnRatio,0)
@@ -118,12 +124,26 @@ function naotoCharInitialization(){
             naoto.mesh.rotation.y = Math.PI/2   
             naoto.mesh.position.set(-40*unitToVw,30*unitToVw/scrnRatio,0)
             break
+        case "stage31":
+            naoto.mesh.rotation.y = Math.PI/2   
+            naoto.mesh.position.set(-20*unitToVw,10*unitToVw/scrnRatio,0)
+            break
         default:
             break
     }
 }
 
 const naotoAnimSequences = {
+    stage1: ()=>{
+        if (!naoto.animPlaying){
+            let tl = gsap.timeline()
+            naoto.animPlaying = true
+            props.animSequenceProp = null
+            tl.call(() => {
+                charMove(naoto, "stage1", 0, 0)
+            }, [], "+=0")
+        }
+    },
     stage21NextLevel: ()=>{
         if (!naoto.animPlaying){
             let tl = gsap.timeline()
@@ -284,6 +304,39 @@ const naotoAnimSequences = {
     },
     stage24AppearanceCheck: ()=>{
         naoto.localVars.stage24Appearance = props.naotoLocalVarsProp.stage24Appearance
+    },
+    stage31Go: ()=>{
+        if (!naoto.animPlaying){
+            let tl = gsap.timeline()
+            naoto.animPlaying = true
+            props.animSequenceProp = null
+            tl.call(() => {
+                charMove(naoto, "idea", 0, 0)
+            }, [], "+=0.5")
+            tl.call(() => {
+                charMove(naoto, "walk", 6, 0)
+            }, [], `+=${charMoveDuration(naoto, "idea", 0, 0)}`)
+            tl.call(() => {
+                charMove(naoto, "push", 20, 0, false, 3)
+            }, [], `+=${charMoveDuration(naoto, "walk", 6, 0)}`)
+            tl.call(() => {
+                emit("popupPushedStateUpdate", "pushed")
+            }, [], `+=0.3`)
+            tl.call(() => {
+                charMove(naoto, "idle", 0, 0)
+            }, [], `+=${charMoveDuration(naoto, "push", 20, 0, false, 3)-0.3}`)
+            tl.call(() => {
+                emit("popupPushedStateUpdate", "dropping")
+            }, [], `+=0.3`)
+            tl.call(() => {
+                charMove(naoto, "leap", 18, -50/scrnRatio+15, true)
+            }, [], `+=2`)
+            tl.call(() => {
+                charMove(naoto, "idle", 0, 0)
+                naoto.animPlaying = false
+                emit("nextButtonActivated")
+            }, [], `+=${charMoveDuration(naoto, "leap", 12, -50/scrnRatio+15, true)}`)
+        }
     }
 }
 
