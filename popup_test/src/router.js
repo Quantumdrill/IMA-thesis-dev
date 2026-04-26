@@ -4,8 +4,10 @@ import popup2 from './components/popup2.vue'
 import popup3 from './components/popup3.vue'
 import popup4 from './components/popup4.vue'
 import home from './components/home.vue'
+import pretext from './components/pretext.vue'
+
 const routes = [
-  { path: '/', component: home },
+  { path: '/', component: pretext },
   { path: '/popup1', component: popup1 },
   { path: '/popup2', component: popup2 },
   { path: '/popup3', component: popup3 },
