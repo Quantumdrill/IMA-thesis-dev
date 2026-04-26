@@ -12,6 +12,7 @@ let router = useRouter()
             <li>Due to different screen positioning mechanisms, the game is only compatible with a Windows machine.</li>
             <li>Please keep the main browser window maximized at all times, and try not to resize or move it.</li>
             <li>If you have dual monitors (or more), please place the main browser window on the main monitor.</li>
+            <li>You can ignore any translation prompts from the popup windows.</li>
             <li>If you have to refresh the page, close all the popups and then refresh.</li>
         </ul>
         <button id="startButton" @click="router.push('/stage1')">Start</button>

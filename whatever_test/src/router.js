@@ -18,6 +18,7 @@ import stage83 from "./components/stages/stage83.vue"
 import stage9 from "./components/stages/stage9.vue"
 import endPage from "./components/stages/endPage.vue"
 import popups from "./components/global/popups.vue"
+import popupsSubmarine from "./components/global/popupsSubmarine.vue"
 import Naoto from "./components/character/Naoto.vue"
 
 const routes = [
@@ -41,6 +42,7 @@ const routes = [
   { path: "/stage9", component: stage9 },
   { path: "/endPage", component: endPage },
   { path: "/popups/:id", component: popups },
+  { path: "/popupsSubmarine/:id", component: popupsSubmarine },
   { path: "/charTest", component: Naoto },
 ]
 

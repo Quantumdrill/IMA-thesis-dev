@@ -67,6 +67,9 @@ export function charMove(charObj, newAnimName, displacementX, displacementY, par
         case "turn":
             duration = 8*0.125
             break
+        case "leapReady":
+            duration = 3*0.125
+            break
         default:
             break
     }
@@ -140,6 +143,9 @@ export function charMoveDuration(charObj, newAnimName, displacementX, displaceme
             break
         case "idea":
             duration = 32*0.125
+            break
+        case "leapReady":
+            duration = 3*0.125
             break
         default:
             break

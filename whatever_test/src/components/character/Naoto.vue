@@ -54,8 +54,8 @@ const naoto = {
     }
 }
 const unitToVw = 50/8 // height of naoto is 8vw, and 50 units, so 50/8 = 6.25 units per vw
-const animArr = ["run", "idle", "leap", "drop", "point", "turn", "stage1", "idea", "push", "walk"]
-const animArrOnce = ["leap", "drop", "point", "turn", "stage1", "idea"] // animations that should only play once
+const animArr = ["run", "idle", "leap", "drop", "point", "turn", "stage1", "idea", "push", "walk", "leapReady"]
+const animArrOnce = ["leap", "drop", "point", "turn", "stage1", "idea", "leapReady"] // animations that should only play once
 
 onMounted(() => {
     renderer = new THREE.WebGLRenderer({antialias:true,canvas:canvas.value,alpha: true})
@@ -127,6 +127,19 @@ function naotoCharInitialization(){
         case "stage31":
             naoto.mesh.rotation.y = Math.PI/2   
             naoto.mesh.position.set(-20*unitToVw,10*unitToVw/scrnRatio,0)
+            break
+        case "stage32":
+            naoto.mesh.rotation.y = Math.PI/2   
+            naoto.mesh.position.set(-27*unitToVw,30*unitToVw/scrnRatio,0)
+            break
+        case "stage32Submarine":
+            naoto.mesh.rotation.y = Math.PI/2   
+            naoto.mesh.position.set(-2*unitToVw, 16*unitToVw/scrnRatio,0)
+            cam.left = -1/(0.0032*100/15)
+            cam.right = 1/(0.0032*100/15)
+            cam.top = 1/(0.0032*100/15)/scrnRatio
+            cam.bottom = -1/(0.0032*100/15)/scrnRatio
+            cam.updateProjectionMatrix()
             break
         default:
             break
@@ -329,13 +342,46 @@ const naotoAnimSequences = {
                 emit("popupPushedStateUpdate", "dropping")
             }, [], `+=0.3`)
             tl.call(() => {
+                charMove(naoto, "leapReady", 0, 0, false, 1)
+            }, [], `+=0.5`)
+            tl.call(() => {
                 charMove(naoto, "leap", 18, -50/scrnRatio+15, true)
-            }, [], `+=2`)
+            }, [], `+=${charMoveDuration(naoto, "leapReady", 0, 0, false, 1)}`)
             tl.call(() => {
                 charMove(naoto, "idle", 0, 0)
                 naoto.animPlaying = false
                 emit("nextButtonActivated")
             }, [], `+=${charMoveDuration(naoto, "leap", 12, -50/scrnRatio+15, true)}`)
+        }
+    },
+    stage32Outer: ()=>{
+        if (!naoto.animPlaying){
+            let tl = gsap.timeline()
+            naoto.animPlaying = true
+            props.animSequenceProp = null
+            tl.call(() => {
+                charMove(naoto, "leapReady", 0, 0, false, 1)
+            }, [], "+=0.5")
+            tl.call(() => {
+                charMove(naoto, "leap", 15, -25/scrnRatio, true)
+            }, [], `+=${charMoveDuration(naoto, "leapReady", 0, 0, false, 1)}`)
+            tl.call(() => {
+                naoto.animPlaying = false
+            }, [], `+=${charMoveDuration(naoto, "leap", 15, -25/scrnRatio, true)}`)
+        }
+    },
+    stage32SubmarineInit: ()=>{
+        if (!naoto.animPlaying){
+            let tl = gsap.timeline()
+            naoto.animPlaying = true
+            props.animSequenceProp = null
+            tl.call(() => {
+                charMove(naoto, "drop", 1, -23.5/scrnRatio)
+            }, [], "+=1.3")
+            tl.call(() => {
+                charMove(naoto, "idle", 0, 0)
+                emit("naotoPosUpdate", 2) // submarine naoto landed
+            }, [], `+=${charMoveDuration(naoto, "drop", 1, -23.5/scrnRatio)}`)
         }
     }
 }

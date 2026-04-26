@@ -1,9 +1,9 @@
 // requires creation of the popups array, bridges object and the popupIndex var
 
-export function openPopup(popupID,left,top,vw){
+export function openPopup(popupID,left,top,vw,popupComponent){
     let newWindow
     newWindow = window.open(
-        `/popups/${popupID.value}`, 
+        `/${popupComponent}/${popupID.value}`, 
         `popup${popupID.value}`,  //provide different names to open multiple popups
         `left=${left},top=${top},width=500,height=500`
     )
@@ -11,11 +11,11 @@ export function openPopup(popupID,left,top,vw){
     return newWindow
 }
 
-export function popupNewInstance(popupID,popups,left,top,vw,popupTick,availableBridges,chan){
+export function popupNewInstance(popupID,popups,left,top,vw,popupTick,availableBridges,chan,popupComponent="popups"){
     if (availableBridges.value>0){
         availableBridges.value -= 1
         let newPopup = {
-            window: openPopup(popupID,left,top,vw),
+            window: openPopup(popupID,left,top,vw,popupComponent),
             locked: false,
             inPos: false,
             inShape: false,
