@@ -51,6 +51,10 @@ function naotoPosUpdate(pos){
     naotoPos.value = pos
 }
 
+function nextButtonAction(){
+    chan.postMessage({type:"stage32PopupComm",id:Number(route.params.id),action:"next"})
+}
+
 watch(naotoPos, (e)=>{ // triggered when naoto landed in submarine
     if (naotoPos.value === 2){
         textDispState.value = true

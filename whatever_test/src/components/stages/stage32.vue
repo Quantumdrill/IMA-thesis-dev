@@ -74,6 +74,9 @@ onMounted(() => {
                     yPos: window.innerHeight*90/100-window.innerWidth*15/100+browserTopHeight
                 }
             }
+            if (e.data.action === "next"){
+                nextButtonAction()
+            }
         }
     }
     

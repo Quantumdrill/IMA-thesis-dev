@@ -76,7 +76,6 @@ const lines = computed(() => { // create an array of lines/intervals for v-for t
                     availableWidth: interval.availableWidth,
                     key: String(Math.round(y))+String(interval.index) // create a unique key for each interval, or line
                 })
-                console.log(output[output.length-1].key)
                 cursor = range.end
             }
             
