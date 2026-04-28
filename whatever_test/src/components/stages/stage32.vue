@@ -168,7 +168,7 @@ function nextButtonAction(){
     for (let i=0;i<popups.length;i++){
         popups[i].window.close()
     }
-    router.push('/stage33')
+    router.push('/waypoint')
 }
 
 function naotoPosUpdate(pos){

@@ -69,7 +69,7 @@ function naotoPosUpdate(pos){
 }
 
 function nextButtonAction(){
-    router.push('/stage31')
+    router.push('/morePopups')
 }
 
 </script>

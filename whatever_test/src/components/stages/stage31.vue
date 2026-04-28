@@ -114,7 +114,7 @@ function nextButtonAction(){
     for (let i=0;i<popups.length;i++){
         popups[i].window.close()
     }
-    router.push('/stage32')
+    router.push('/submarine')
 }
 
 requestAnimationFrame(tick60fps)
@@ -136,7 +136,7 @@ requestAnimationFrame(tick60fps)
         <div class="block" id="bridge" ref="bridgeDom"></div>
         <div id="footer">
             <div id="footerDivider"></div>
-            <div id="footerText">Copyright © Toby Lu, All Rights Reserved</div>
+            <div id="footerText">Copyright © 2026 Toby Lu, All Rights Reserved</div>
         </div>
         <button id="nextButton" @click="nextButtonAction" ref="nextButton">next</button>
     </div>

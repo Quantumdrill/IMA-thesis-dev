@@ -120,7 +120,7 @@ function nextButtonAction(){
     for (let i=0;i<popups.length;i++){
         popups[i].window.close()
     }
-    router.push('/stage22')
+    router.push('/stretchedPopupBridges')
 }
 
 </script>

@@ -49,7 +49,7 @@ window.addEventListener("scroll", (e) => {
                 <div class="blockImageContainer">ImagePlaceholder</div>
                 <div class="blockText">
                     <p>{{ lorumPlaceholder.repeat(3) }}</p>
-                    <button id="button3" @click="router.push('/stage21')">Get The Cookie Now!</button>
+                    <button id="button3" @click="router.push('/popupBridges')">Get The Cookie Now!</button>
                 </div>
             </div>
         </div>
@@ -139,5 +139,9 @@ h2 {
     width: 100vw;
     height: 100vh;
     z-index: 1;
+}
+
+button{
+    padding: 0;
 }
 </style>

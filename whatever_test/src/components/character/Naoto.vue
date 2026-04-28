@@ -7,7 +7,7 @@ import MotionPathPlugin from "gsap/MotionPathPlugin"
 gsap.registerPlugin(MotionPathPlugin)
 import {onMounted, useTemplateRef, watch, ref} from "vue"
 import { LoadingManager } from "three"
-import { loadCharAnim, loadCharSkm, animTransition, charMove, charMoveDuration } from "../../functions/char"
+import { loadCharAnim, loadCharSkm, animTransition, charMove, charMoveDuration, getBoneIndex } from "../../functions/char"
 
 const scene = new THREE.Scene()
 const canvas = useTemplateRef("canvasDom")
@@ -42,6 +42,8 @@ const modelLoader = new FBXLoader(loadingManager)
 const naoto = {
     mesh: null,
     skm: null,
+    skeleton: null,
+    bones: {},
     animClips: {
     },
     animActions: {
@@ -51,24 +53,39 @@ const naoto = {
     animPlaying: false,
     localVars: {
         stage24Appearance: false,
-    }
+    },
+    reactiveRig: true,
 }
 const unitToVw = 50/8 // height of naoto is 8vw, and 50 units, so 50/8 = 6.25 units per vw
-const animArr = ["run", "idle", "leap", "drop", "point", "turn", "stage1", "idea", "push", "walk", "leapReady"]
+const animArr = ["run", "idle", "leap", "drop", "point", "turn", "stage1", "idea", "push", "walk", "leapReady", "yes", "no"]
 const animArrOnce = ["leap", "drop", "point", "turn", "stage1", "idea", "leapReady"] // animations that should only play once
+
+//misc
+let mousePos = {
+    x: 0,
+    y: 0,
+}
 
 onMounted(() => {
     renderer = new THREE.WebGLRenderer({antialias:true,canvas:canvas.value,alpha: true})
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.setPixelRatio(window.devicePixelRatio)
+    document.addEventListener("mousemove", (e) => {
+        mousePos.x = e.clientX
+        mousePos.y = e.clientY
+    })
     
     loadCharSkm("Naoto", naoto, modelLoader)
     for (const anim of animArr){
         loadCharAnim("Naoto", anim, naoto, modelLoader)
     }
-
+    
     loadingManager.onLoad = () => {
         naoto.skm.material = new THREE.MeshLambertMaterial({color: 0xffffff})
+        // get bones
+        naoto.bones.head = naoto.skeleton.bones[getBoneIndex(naoto.skeleton, "Naoto_rigneck_head_C0_JT")]
+        naoto.bones.upperSpine = naoto.skeleton.bones[getBoneIndex(naoto.skeleton, "Naoto_rigspine_1_C0_JT")]
+
         scene.add(naoto.mesh)
         
         naotoCharInitialization()
@@ -92,7 +109,28 @@ onMounted(() => {
 
 function globalUpdatePerFrame(){
     naoto.mixer.update(1/fps)
+
+    // place after mixer update to overwrite animated posture
+    if (naoto.reactiveRig){
+        reactiveRig()
+    }
+
     renderer.render(scene,cam)
+}
+
+function reactiveRig(){
+    let charToMouseAngle = Math.atan((window.innerHeight-mousePos.y-10*window.innerHeight/100)/(mousePos.x-20*window.innerWidth/100))
+    let headRotationX
+    let upperSpineRotationX
+    if (charToMouseAngle<80/180*Math.PI&&charToMouseAngle>0){
+        headRotationX = charToMouseAngle*0.7
+        upperSpineRotationX = charToMouseAngle/4-0.2
+    } else {
+        headRotationX = 80/180*Math.PI*0.7
+        upperSpineRotationX = 80/180*Math.PI/4-0.2
+    }
+    naoto.bones.head.rotation.x = headRotationX
+    naoto.bones.upperSpine.rotation.x = upperSpineRotationX
 }
 
 function animTick(){
@@ -140,6 +178,10 @@ function naotoCharInitialization(){
             cam.top = 1/(0.0032*100/15)/scrnRatio
             cam.bottom = -1/(0.0032*100/15)/scrnRatio
             cam.updateProjectionMatrix()
+            break
+        case "stage33":
+            naoto.mesh.rotation.y = Math.PI/2   
+            naoto.mesh.position.set(-30*unitToVw, -40*unitToVw/scrnRatio,0)
             break
         default:
             break
@@ -383,9 +425,23 @@ const naotoAnimSequences = {
                 emit("naotoPosUpdate", 2) // submarine naoto landed
             }, [], `+=${charMoveDuration(naoto, "drop", 1, -23.5/scrnRatio)}`)
         }
-    }
+    },
+    stage33Yes: ()=>{
+        props.animSequenceProp = null
+        charMove(naoto, "yes", 0, 0)
+        naoto.reactiveRig = false
+    },
+    stage33No: ()=>{
+        props.animSequenceProp = null
+        charMove(naoto, "no", 0, 0)
+        naoto.reactiveRig = false
+    },
+    stage33Idle: ()=>{
+        props.animSequenceProp = null
+        charMove(naoto, "idle", 0, 0)
+        naoto.reactiveRig = true
+    },
 }
-
 </script>
 <template>
     <canvas id="canvas" ref="canvasDom"></canvas>

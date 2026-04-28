@@ -115,7 +115,7 @@ function nextButtonAction(){
     for (let i=0;i<popups.length;i++){
         popups[i].window.close()
     }
-    router.push('/stage24')
+    router.push('/darkMode')
 }
 
 </script>

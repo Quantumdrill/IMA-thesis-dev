@@ -16,7 +16,12 @@ export function loadCharAnim(charname, animName, charObj, modelLoader){
 export function loadCharSkm(charname, charObj, modelLoader){
     modelLoader.load(`/src/assets/char/${charname}_skm.fbx`, (loaded) => {
         charObj.mesh = loaded
-        charObj.skm = loaded.children[0]
+        loaded.children.forEach(child=>{
+            if(child.isSkinnedMesh){
+                charObj.skm=child
+            }
+        }) 
+        charObj.skeleton=charObj.skm.skeleton
     })
 }
 
@@ -151,4 +156,15 @@ export function charMoveDuration(charObj, newAnimName, displacementX, displaceme
             break
     }
     return duration
+}
+
+//get the index of the bone in the bones array by name, useful in the ik creation
+export function getBoneIndex(skeleton,name){
+    let output
+    skeleton.bones.forEach((bone,i) => {
+        if (bone.name === name){
+            output = i
+        }
+    });
+    return output
 }
