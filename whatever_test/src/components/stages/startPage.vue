@@ -9,10 +9,11 @@ let router = useRouter()
         <p>Because of this, there are some limitations to the game and some requirements that you need to follow during the game:</p>
         <ul>
             <!-- <li>The game is tested on Chrome only.</li> -->
-            <li>Due to different screen positioning mechanisms, the game is only compatible with a Windows machine.</li>
+            <li>Due to different screen positioning mechanisms, the game is only compatible on a Windows machine.</li>
             <li><b>Please keep the main browser window maximized at all times, and try not to resize or move it. </b></li>
             <li><b>But don't make the browser full screen, the url bar needs to be visible.</b></li>
             <li>If you have dual monitors (or more), please place the browser window on the main monitor.</li>
+            <li>Ultrawide monitors may cause display issues.</li>
             <li>You can ignore any translation prompts from the popup windows.</li>
             <li>If you have to refresh the page, close all the popups and then refresh.</li>
         </ul>

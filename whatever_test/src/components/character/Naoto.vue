@@ -54,7 +54,7 @@ const naoto = {
     localVars: {
         stage24Appearance: false,
     },
-    reactiveRig: true,
+    reactiveRig: false,
 }
 const unitToVw = 50/8 // height of naoto is 8vw, and 50 units, so 50/8 = 6.25 units per vw
 const animArr = ["run", "idle", "leap", "drop", "point", "turn", "stage1", "idea", "push", "walk", "leapReady", "yes", "no"]
@@ -122,13 +122,16 @@ function reactiveRig(){
     let charToMouseAngle = Math.atan((window.innerHeight-mousePos.y-10*window.innerHeight/100)/(mousePos.x-20*window.innerWidth/100))
     let headRotationX
     let upperSpineRotationX
-    if (charToMouseAngle<80/180*Math.PI&&charToMouseAngle>0){
+    if (window.innerHeight-mousePos.y-10*window.innerHeight/100<0){
+        headRotationX = 0
+        upperSpineRotationX = 0
+    } else if (charToMouseAngle<80/180*Math.PI&&charToMouseAngle>0){
         headRotationX = charToMouseAngle*0.7
-        upperSpineRotationX = charToMouseAngle/4-0.2
-    } else {
+        upperSpineRotationX = charToMouseAngle/4-0.1
+    } else if (charToMouseAngle>80/180*Math.PI||charToMouseAngle<0){
         headRotationX = 80/180*Math.PI*0.7
-        upperSpineRotationX = 80/180*Math.PI/4-0.2
-    }
+        upperSpineRotationX = 80/180*Math.PI/4-0.1
+    } 
     naoto.bones.head.rotation.x = headRotationX
     naoto.bones.upperSpine.rotation.x = upperSpineRotationX
 }
@@ -426,6 +429,9 @@ const naotoAnimSequences = {
             }, [], `+=${charMoveDuration(naoto, "drop", 1, -23.5/scrnRatio)}`)
         }
     },
+    stage33Init: ()=>{
+        naoto.reactiveRig = true
+    },
     stage33Yes: ()=>{
         props.animSequenceProp = null
         charMove(naoto, "yes", 0, 0)
@@ -440,6 +446,18 @@ const naotoAnimSequences = {
         props.animSequenceProp = null
         charMove(naoto, "idle", 0, 0)
         naoto.reactiveRig = true
+    },
+    stage33Attacked: ()=>{
+        if (!naoto.animPlaying){
+            let tl = gsap.timeline()
+            naoto.animPlaying = true    
+            props.animSequenceProp = null
+            tl.call(() => {
+                charMove(naoto, "idle", 0, 0)
+                naoto.reactiveRig = false
+                naoto.animPlaying = false
+            }, [], "+=0")
+        }
     },
 }
 </script>

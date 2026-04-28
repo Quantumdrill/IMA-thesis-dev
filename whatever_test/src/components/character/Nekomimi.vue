@@ -22,15 +22,15 @@ let accumulatedDelta = 0
 const clock = new THREE.Timer()
 
 //camera
-const camZoomFactor = window.innerWidth*0.0032
-const cam = new THREE.OrthographicCamera(-window.innerWidth/camZoomFactor,window.innerWidth/camZoomFactor,window.innerHeight/camZoomFactor,-window.innerHeight/camZoomFactor,-1000,1000)
+const camZoomFactor = 26
+const cam = new THREE.PerspectiveCamera(camZoomFactor, window.innerWidth/window.innerHeight, 0.1, 1000)
 cam.position.set(0,0,50)
 
 //lights
 const backLightFront = new THREE.DirectionalLight(0xffffff, 2)
-backLightFront.position.set(50, 20, -50)
+backLightFront.position.set(50, 20, 20)
 const backLightBack = new THREE.DirectionalLight(0xffffff, 1)
-backLightBack.position.set(-50, 10, -50)
+backLightBack.position.set(-50, 10, 20)
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.1)
 scene.add(cam,backLightFront,backLightBack,ambientLight)
 
@@ -57,8 +57,8 @@ const nekomimi = {
     reactiveRig: true,
 }
 const unitToVw = 50/8 // height of naoto is 8vw, and 50 units, so 50/8 = 6.25 units per vw
-const animArr = []
-const animArrOnce = [] // animations that should only play once
+const animArr = ["stage33"]
+const animArrOnce = ["stage33"] // animations that should only play once
 
 //misc
 let mousePos = {
@@ -83,8 +83,8 @@ onMounted(() => {
     loadingManager.onLoad = () => {
         nekomimi.skm.material = new THREE.MeshLambertMaterial({color: 0xffffff})
         // get bones
-        nekomimi.bones.head = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigneck_head_C0_JT")]
-        nekomimi.bones.upperSpine = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigspine_1_C0_JT")]
+        // nekomimi.bones.head = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigneck_head_C0_JT")]
+        // nekomimi.bones.upperSpine = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigspine_1_C0_JT")]
 
         scene.add(nekomimi.mesh)
         
@@ -97,9 +97,8 @@ onMounted(() => {
         for (const anim of animArrOnce){
             nekomimi.animActions[anim].loop = THREE.LoopOnce
         }
-        nekomimi.animActions.stage1.clampWhenFinished = true
 
-        nekomimi.animActions.idle.play()
+        nekomimi.animActions.stage33.play()
         watch(()=>props.animSequenceProp, () => {
             nekomimiAnimSequences[props.animSequenceProp]()
         })
@@ -136,13 +135,26 @@ function animTick(){
 
 function nekomimiCharInitialization(){
     switch (props.parentComponent){
+        case "stage33":
+            nekomimi.mesh.position.set(-0*unitToVw, -100*unitToVw/scrnRatio,0)
+            break
         default:
             break
     }
 }
 
 const nekomimiAnimSequences = {
-
+    stage33Init: ()=>{
+        if (!nekomimi.animPlaying){
+            let tl = gsap.timeline()
+            nekomimi.animPlaying = true
+            props.animSequenceProp = null
+            tl.call(() => {
+                nekomimi.mesh.position.set(-0*unitToVw, -0*unitToVw/scrnRatio,0)
+                charMove(nekomimi, "stage33", 0, 0)
+            }, [], "+=0.5")
+        }
+    },
 }
 </script>
 <template>

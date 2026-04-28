@@ -3,12 +3,15 @@ import {ref, onMounted, useTemplateRef, reactive, watch} from "vue"
 import {useRouter} from "vue-router"
 import { popupNewInstance, popupFixSize, popupFixPosition, popupSnapCheck, popupCloseCheck, bridgeCheck } from "../../functions/popup"
 import Naoto from "../character/Naoto.vue"
+import Nekomimi from "../character/Nekomimi.vue"
 
 let router = useRouter()
-let lorumPlaceholder = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum"
 const browserTopHeight = window.outerHeight - window.innerHeight
 const nextButton = useTemplateRef("nextButton")
-const animSequence = ref(null)
+const naotoAnimSequence = ref(null)
+const nekomimiAnimSequence = ref(null)
+const navItem5DropdownContainerDom = useTemplateRef("navItem5DropdownContainerDom")
+const navItem5TitleContainerDom = useTemplateRef("navItem5TitleContainerDom")
 let popups = []
 let popupID = {value: 0}
 let chan
@@ -16,6 +19,8 @@ let chan
 //level related
 let yesOrNo = ref(null)
 let yesOrNoPrev = ref(null)
+let nekomimiVisible = ref(false)
+let naotoAnimStage = ref("watching")
 
 onMounted(() => {
     for (let i=0;i<popups.length;i++){
@@ -30,17 +35,19 @@ onMounted(() => {
         }
     }
     
+    naotoAnimSequence.value = "stage33Init"
+    
     watch(yesOrNo, (e)=>{
 
         yesOrNoPrev.value = yesOrNo.value 
         setTimeout(()=>{ // prevent immediate change
-            if (yesOrNoPrev.value === e){
+            if (yesOrNoPrev.value === e && naotoAnimStage.value === "watching"){
                 if (e===true){
-                    animSequence.value = "stage33Yes"
+                    naotoAnimSequence.value = "stage33Yes"
                 } else if (e===false){
-                    animSequence.value = "stage33No"
+                    naotoAnimSequence.value = "stage33No"
                 } else if (e===null){
-                    animSequence.value = "stage33Idle"
+                    naotoAnimSequence.value = "stage33Idle"
                 }
             }
         }, 200)
@@ -114,12 +121,21 @@ function popupTick(){
                 </div>
             </div>
             <div id="navItem5" class="navItem">
-                <div class="navItemTitleContainer"><p class="navItemTitle">Traveller Tools</p></div>
-                <div class="navItemDropdownContainer" id="navItem5DropdownContainer">
+                <div class="navItemTitleContainer" ref="navItem5TitleContainerDom"><p class="navItemTitle">Traveller Tools</p></div>
+                <div class="navItemDropdownContainer" id="navItem5DropdownContainer" ref="navItem5DropdownContainerDom">
                     <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Router</p></div>
                     <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Site Map</p></div>
                     <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Shield</p></div>
-                    <div class="navItemDropdownItemContainer" @mouseenter="yesOrNo = true" @mouseleave="yesOrNo = null"><p class="navItemDropdownItemText">Artifact Map</p></div>
+                    <div class="navItemDropdownItemContainer" 
+                    @mouseenter="yesOrNo = true" 
+                    @mouseleave="yesOrNo = null" 
+                    @click="nekomimiVisible = true; 
+                    nekomimiAnimSequence = 'stage33Init';
+                    navItem5DropdownContainerDom.style.display = 'flex';
+                    navItem5TitleContainerDom.style.backgroundColor = '#696969';
+                    naotoAnimStage = 'attacked';
+                    naotoAnimSequence = 'stage33Attacked';
+                    "><p class="navItemDropdownItemText">Artifact Map</p></div>
                     <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Browser</p></div>
                 </div>
             </div>
@@ -131,7 +147,8 @@ function popupTick(){
             <div id="footerText">Copyright © 2026 Web Waypoint, All Rights Reserved</div>
         </div>
     </div>
-    <Naoto id="naoto" :parentComponent="'stage33'" :animSequenceProp="animSequence" @nextButtonActivated="nextButton.disabled = false" />
+    <Naoto id="naoto" :parentComponent="'stage33'" :animSequenceProp="naotoAnimSequence" @nextButtonActivated="nextButton.disabled = false" />
+    <Nekomimi id="nekomimi" v-show="nekomimiVisible" :parentComponent="'stage33'" :animSequenceProp="nekomimiAnimSequence" @nextButtonActivated="nextButton.disabled = false" />
 </template>
 
 
@@ -144,7 +161,7 @@ function popupTick(){
 header{
     position: fixed;
     width: 100vw;
-    height: 20vh;
+    height: calc(100vh - 37vw);
     top: 0;
     left: 0;
     overflow: hidden;
@@ -154,9 +171,9 @@ header{
 
 #titleContainer{
     width: 100vw;
-    height: 6vh;
+    height: 3vw;
     padding-left: 5vw;
-    bottom: 1vh;
+    bottom: 0.5vw;
     left: 0;
     position: absolute;
 }
@@ -182,8 +199,8 @@ nav{
     justify-content: space-evenly;
     align-items: center;
     width: 100vw;
-    height: 8vh;
-    top: 20vh;
+    height: 4vw;
+    top: calc(100vh - 37vw);
     left: 0;
     padding: 0 10vw;
     box-sizing: border-box;
@@ -200,7 +217,7 @@ nav{
 }
 
 .navItem{
-    /* font-size: 1vw; */
+    font-size: 1vw;
     font-weight: bold;
     color: #fff;
     width: 15vw;
@@ -230,11 +247,11 @@ nav{
 
 .navItemDropdownItemContainer{
     width: 100%;
-    height: 5vh;
+    height: 2.5vw;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 1vh 0;
+    padding: 0.5vw 0;
 }
 
 .navItemDropdownItemContainer:hover{
@@ -304,5 +321,7 @@ nav{
     z-index: -2;
 }
 
-
+#nekomimi{
+    position: fixed;
+}
 </style>
