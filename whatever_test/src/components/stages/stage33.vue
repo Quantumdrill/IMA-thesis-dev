@@ -1,57 +1,79 @@
 <script setup>
 import {ref, onMounted, useTemplateRef, reactive, watch} from "vue"
-import {useRouter} from "vue-router"
+import {useRouter, useRoute} from "vue-router"
 import { popupNewInstance, popupFixSize, popupFixPosition, popupSnapCheck, popupCloseCheck, bridgeCheck } from "../../functions/popup"
 import Naoto from "../character/Naoto.vue"
 import Nekomimi from "../character/Nekomimi.vue"
+import gsap from "gsap"
 
 let router = useRouter()
+const route = useRoute()
 const browserTopHeight = window.outerHeight - window.innerHeight
-const nextButton = useTemplateRef("nextButton")
+const nextButtonDom = useTemplateRef("nextButtonDom")
 const naotoAnimSequence = ref(null)
 const nekomimiAnimSequence = ref(null)
+const navItem5DropdownMovableDom = useTemplateRef("navItem5DropdownMovableDom")
 const navItem5DropdownContainerDom = useTemplateRef("navItem5DropdownContainerDom")
 const navItem5TitleContainerDom = useTemplateRef("navItem5TitleContainerDom")
 let popups = []
 let popupID = {value: 0}
+let availableBridges = ref(1)
 let chan
 
 //level related
 let yesOrNo = ref(null)
 let yesOrNoPrev = ref(null)
 let nekomimiVisible = ref(false)
+let naotoVisible = ref(true)
 let naotoAnimStage = ref("watching")
+let charPos = ref(0)
+let popupFlyingState = ref(false)
 
 onMounted(() => {
     for (let i=0;i<popups.length;i++){
         popups[i].window.close()
     }
-    nextButton.value.disabled = true
+    nextButtonDom.value.disabled = true
 
     chan = new BroadcastChannel("global")
     chan.onmessage=(e)=>{ //snap popup on message
         if (e.data.type==="handshake"){
-            chan.postMessage({type:"typeInitialize",id:e.data.id,popupType:1})
+            chan.postMessage({type:"typeInitialize",id:e.data.id,popupType:3})
         }
     }
     
-    naotoAnimSequence.value = "stage33Init"
+    setTimeout(() => {
+        naotoAnimSequence.value = "stage33Init"
+    }, 1000)
     
     watch(yesOrNo, (e)=>{
-
-        yesOrNoPrev.value = yesOrNo.value 
-        setTimeout(()=>{ // prevent immediate change
-            if (yesOrNoPrev.value === e && naotoAnimStage.value === "watching"){
-                if (e===true){
-                    naotoAnimSequence.value = "stage33Yes"
-                } else if (e===false){
-                    naotoAnimSequence.value = "stage33No"
-                } else if (e===null){
-                    naotoAnimSequence.value = "stage33Idle"
+        if (charPos.value===1){
+            yesOrNoPrev.value = yesOrNo.value 
+            setTimeout(()=>{ // prevent immediate change
+                if (yesOrNoPrev.value === e && naotoAnimStage.value === "watching"){
+                    if (e===true){
+                        naotoAnimSequence.value = "stage33Yes"
+                    } else if (e===false){
+                        naotoAnimSequence.value = "stage33No"
+                    } else if (e===null){
+                        naotoAnimSequence.value = "stage33Idle"
+                    }
                 }
-            }
-        }, 200)
+            }, 200)
+        }
     })
+
+    watch(
+        () => route.query.uninvitedGuest,
+        (newValue) => {
+            if (newValue === "false") {
+                router.push('/stage5')
+            }
+        },
+        {
+            immediate: true
+        }
+    )
 })
 
 
@@ -69,12 +91,91 @@ function popupTick(){
         if (elem.locked){
             popupFixPosition(elem.window,elem.lockedPositionX,elem.lockedPositionY)
         }
-
     })
 
+    //stabbed popup update
+    if (popupFlyingState.value===true){
+        popups[0].lockedPositionX -= 1*window.innerWidth/100
+        if (popups[0].window.screenX <= 5){
+            popupFlyingState.value = false
+            popups[0].window.close()
+        }
+    }
     requestAnimationFrame(popupTick)
 }
 
+function nekomimiPosUpdate(pos){
+    if (pos===2){ // what happens after nekomimi is summoned
+        let tl = gsap.timeline()
+        tl.to(navItem5DropdownContainerDom.value, {
+            y: "-15vw",
+            duration: 0.2,
+            ease: "power2.inOut",
+            onComplete: () => {
+                navItem5DropdownContainerDom.value.style.display = "none"
+                navItem5TitleContainerDom.value.style.backgroundColor = "#484848"
+            }
+        })
+        tl.call(() => {
+            nextButtonDom.value.style.display = "none"
+            nextButtonDom.value.style.bottom = "16vw"
+            nextButtonDom.value.style.right = "12vw"
+            nextButtonDom.value.disabled = false
+        }, [], "+=5.4")
+        tl.call(() => {
+            popupNewInstance(popupID,popups,5*window.innerWidth/100,90*window.innerHeight/100+browserTopHeight-15*window.innerWidth/100,15,popupTick,availableBridges,chan,'popupsSubmarine')
+            popups[0].lockedPositionX = 5*window.innerWidth/100
+            popups[0].lockedPositionY = 90*window.innerHeight/100+browserTopHeight-15*window.innerWidth/100
+            popups[0].locked = true
+        }, [], "+=0.2")
+        tl.call(() => {
+            nextButtonDom.value.style.display = "block"
+            nextButtonDom.value.style.rotate = "-10deg"
+        }, [], "+=1.3")
+        tl.to(nextButtonDom.value, {
+            x: "-65vw",
+            y: "+8vw",
+            ease: "none",
+            duration: 0.1,
+            onComplete: () => {
+                // nextButtonDom.value.style.rotate = "20deg"
+                chan.postMessage({type:"stage33PopupComm",id:popups[0].id,action:"stabbed"})
+            }
+        })
+        tl.to(nextButtonDom.value, {
+            x: "+40vw",
+            y: "-15vw",
+            ease: "none",
+            duration: 0.1,
+        })
+        tl.call(() => {
+            popupFlyingState.value = true
+        }, [], "+=0.5")
+    } 
+}
+
+function naotoPosUpdate(pos){
+    if (pos===1){ // what happens after nekomimi is summoned
+        charPos.value = 1
+    } else if (pos===4){ // what happens after naoto is stabbed in submarine
+        charPos.value = 4
+        naotoVisible.value = false
+    }
+}
+
+function artifactMapClickAction(){
+    nekomimiVisible.value = true; 
+    nekomimiAnimSequence.value = 'stage33Init';
+    navItem5DropdownMovableDom.value.style.display = 'block';
+    navItem5DropdownContainerDom.value.style.display = 'flex';
+    navItem5TitleContainerDom.value.style.backgroundColor = '#696969';
+    naotoAnimStage.value = 'attacked';
+    naotoAnimSequence.value = 'stage33Attacked';
+    router.replace({
+        query: {uninvitedGuest: true}
+    })
+    
+}
 
 </script>
 
@@ -122,33 +223,35 @@ function popupTick(){
             </div>
             <div id="navItem5" class="navItem">
                 <div class="navItemTitleContainer" ref="navItem5TitleContainerDom"><p class="navItemTitle">Traveller Tools</p></div>
-                <div class="navItemDropdownContainer" id="navItem5DropdownContainer" ref="navItem5DropdownContainerDom">
-                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Router</p></div>
-                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Site Map</p></div>
-                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Shield</p></div>
-                    <div class="navItemDropdownItemContainer" 
-                    @mouseenter="yesOrNo = true" 
-                    @mouseleave="yesOrNo = null" 
-                    @click="nekomimiVisible = true; 
-                    nekomimiAnimSequence = 'stage33Init';
-                    navItem5DropdownContainerDom.style.display = 'flex';
-                    navItem5TitleContainerDom.style.backgroundColor = '#696969';
-                    naotoAnimStage = 'attacked';
-                    naotoAnimSequence = 'stage33Attacked';
-                    "><p class="navItemDropdownItemText">Artifact Map</p></div>
-                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Browser</p></div>
+                <div id="navItem5DropdownMovable" ref="navItem5DropdownMovableDom">
+                    <div class="navItemDropdownContainer" id="navItem5DropdownContainer" ref="navItem5DropdownContainerDom">
+                        <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Router</p></div>
+                        <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Site Map</p></div>
+                        <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Shield</p></div>
+                        <div class="navItemDropdownItemContainer" 
+                        @mouseenter="yesOrNo = true" 
+                        @mouseleave="yesOrNo = null" 
+                        @click="artifactMapClickAction"
+                        ><p class="navItemDropdownItemText">Artifact Map</p></div>
+                        <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Browser</p></div>
+                    </div>
                 </div>
             </div>
         </nav>
         <!-- <div class="block" id="leftPlatform">{{ lorumPlaceholder.repeat(2) }}</div> -->
-        <button id="nextButton" @click="nextButtonAction" ref="nextButton">next</button>
+        <button id="nextButton" @click="nextButtonAction" ref="nextButtonDom">next</button>
         <!-- <div class="block" id="rightPlatform">{{ lorumPlaceholder.repeat(2) }}</div> -->
         <div id="footer">
             <div id="footerText">Copyright © 2026 Web Waypoint, All Rights Reserved</div>
         </div>
     </div>
-    <Naoto id="naoto" :parentComponent="'stage33'" :animSequenceProp="naotoAnimSequence" @nextButtonActivated="nextButton.disabled = false" />
-    <Nekomimi id="nekomimi" v-show="nekomimiVisible" :parentComponent="'stage33'" :animSequenceProp="nekomimiAnimSequence" @nextButtonActivated="nextButton.disabled = false" />
+    <Naoto id="naoto" v-show="naotoVisible" :parentComponent="'stage33'" :animSequenceProp="naotoAnimSequence" @nextButtonActivated="nextButton.disabled = false" @naotoPosUpdate="naotoPosUpdate" />
+    <Nekomimi id="nekomimi" 
+    v-show="nekomimiVisible" 
+    :parentComponent="'stage33'" 
+    :animSequenceProp="nekomimiAnimSequence" 
+    @nextButtonActivated="nextButton.disabled = false" 
+    @nekomimiPosUpdate="nekomimiPosUpdate" />
 </template>
 
 
@@ -245,15 +348,26 @@ nav{
     cursor: pointer;
 }
 
+#navItem5DropdownMovable{
+    display: none;
+}
+
 .navItemDropdownItemContainer{
     width: 100%;
-    height: 2.5vw;
+    height: 3vw;
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 0.5vw 0;
+    box-sizing: border-box;
 }
 
+#navItem5DropdownMovable{
+    position: relative;
+    width: 100%;
+    height: 15vw;
+    overflow: hidden;
+}
 .navItemDropdownItemContainer:hover{
     background-color: #383838;
 }
@@ -276,6 +390,11 @@ nav{
 #navItem4:hover #navItem4DropdownContainer{
     background-color: #696969;
     display: flex;
+}
+
+#navItem5:hover #navItem5DropdownMovable{
+    background-color: #696969;
+    display: block;
 }
 
 #navItem5:hover #navItem5DropdownContainer{

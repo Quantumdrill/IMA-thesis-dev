@@ -7,7 +7,7 @@ import Naoto from "../character/Naoto.vue"
 let buttonDispState = ref(false)
 let textDispState = ref(true)
 let lockedState = ref(false)
-let textDisp = ref("Drag me")
+let textDisp = ref("")
 let animSequence = ref(null)
 const route = useRoute()
 const chan = new BroadcastChannel("global")
@@ -32,11 +32,18 @@ chan.onmessage=(e)=>{
             nextButtonDispState.value = true
         }
     }
+    if (e.data.type === "stage33PopupComm" && e.data.id === Number(route.params.id)){
+        if (e.data.action === "stabbed"){
+            animSequence.value = "stage33StabbedInSubmarine"
+        }
+    }
     if (e.data.type === "typeInitialize" && e.data.id === Number(route.params.id)){
         if (e.data.popupType===1){
             textDisp.value = "Drag me"
         } else if (e.data.popupType===2){
             textDisp.value = "Wait"
+        } else if (e.data.popupType===3){
+            textDisp.value = ""
         }
     }
 }
@@ -69,7 +76,7 @@ watch(naotoPos, (e)=>{ // triggered when naoto landed in submarine
         <p v-if="textDispState">{{textDisp}}</p> 
         <button v-if="buttonDispState&&!lockedState" @click="snapInPlace()">Snap in place</button> 
     </div>
-    <Naoto id="naoto" :parentComponent="'stage32Submarine'" :animSequenceProp="animSequence" @nextButtonActivated="nextButton.disabled = false" @naotoPosUpdate="naotoPosUpdate"/>
+    <Naoto id="naoto" :parentComponent="'popupsSubmarine'" :animSequenceProp="animSequence" @nextButtonActivated="nextButton.disabled = false" @naotoPosUpdate="naotoPosUpdate"/>
     <button id="nextButton" v-if="nextButtonDispState" @click="nextButtonAction" ref="nextButton">next</button>
 </template>
 <style scoped>

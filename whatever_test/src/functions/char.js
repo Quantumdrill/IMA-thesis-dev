@@ -49,6 +49,9 @@ export function charMove(charObj, newAnimName, displacementX, displacementY, par
         case "push":
             speed = 2.3
             break
+        case "stabbed":
+            speed = 40
+            break
         default:
             break
     }
@@ -129,6 +132,9 @@ export function charMoveDuration(charObj, newAnimName, displacementX, displaceme
         case "push":
             speed = 2.3
             break
+        case "stabbed":
+            speed = 40
+            break
         default:
             break
     }
@@ -151,6 +157,11 @@ export function charMoveDuration(charObj, newAnimName, displacementX, displaceme
             break
         case "leapReady":
             duration = 3*0.125
+            break
+        case "stage33":
+            if (charObj.name === "Nekomimi"){
+                duration = 96*0.125
+            }
             break
         default:
             break

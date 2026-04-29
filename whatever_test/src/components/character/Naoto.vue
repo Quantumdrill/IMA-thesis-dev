@@ -40,6 +40,7 @@ const modelLoader = new FBXLoader(loadingManager)
 
 //characters
 const naoto = {
+    name: "Naoto",
     mesh: null,
     skm: null,
     skeleton: null,
@@ -57,8 +58,10 @@ const naoto = {
     reactiveRig: false,
 }
 const unitToVw = 50/8 // height of naoto is 8vw, and 50 units, so 50/8 = 6.25 units per vw
-const animArr = ["run", "idle", "leap", "drop", "point", "turn", "stage1", "idea", "push", "walk", "leapReady", "yes", "no"]
-const animArrOnce = ["leap", "drop", "point", "turn", "stage1", "idea", "leapReady"] // animations that should only play once
+const unitToVh = unitToVw/scrnRatio
+const animArr = ["run", "idle", "leap", "drop", "point", "turn", "stage1", "idea", "push", "walk", "leapReady", "yes", "no", "fear", "stabbed"]
+const animArrOnce = ["leap", "drop", "point", "turn", "stage1", "idea", "leapReady", "stabbed"] // animations that should only play once
+const animArrClamped = ["stage1", "stabbed"] // animations that should only play once and clamp when finished
 
 //misc
 let mousePos = {
@@ -97,7 +100,9 @@ onMounted(() => {
         for (const anim of animArrOnce){
             naoto.animActions[anim].loop = THREE.LoopOnce
         }
-        naoto.animActions.stage1.clampWhenFinished = true
+        for (const anim of animArrClamped){
+            naoto.animActions[anim].clampWhenFinished = true
+        }
 
         naoto.animActions.idle.play()
         watch(()=>props.animSequenceProp, () => {
@@ -151,31 +156,31 @@ function animTick(){
 function naotoCharInitialization(){
     switch (props.parentComponent){
         case "stage1": 
-            naoto.mesh.position.set(-52*unitToVw,-5*unitToVw/scrnRatio,0)
+            naoto.mesh.position.set(-52*unitToVw,-5*unitToVh,0)
             break
         case "stage21":
             naoto.mesh.rotation.y = Math.PI/2   
-            naoto.mesh.position.set(-36*unitToVw,-5*unitToVw/scrnRatio,0)
+            naoto.mesh.position.set(-36*unitToVw,-5*unitToVh,0)
             break
         case "stage22":
             naoto.mesh.rotation.y = Math.PI/2   
-            naoto.mesh.position.set(-36*unitToVw,-5*unitToVw/scrnRatio,0)
+            naoto.mesh.position.set(-36*unitToVw,-5*unitToVh,0)
             break
         case "stage24":
             naoto.mesh.rotation.y = Math.PI/2   
-            naoto.mesh.position.set(-40*unitToVw,30*unitToVw/scrnRatio,0)
+            naoto.mesh.position.set(-40*unitToVw,30*unitToVh,0)
             break
         case "stage31":
             naoto.mesh.rotation.y = Math.PI/2   
-            naoto.mesh.position.set(-20*unitToVw,10*unitToVw/scrnRatio,0)
+            naoto.mesh.position.set(-20*unitToVw,10*unitToVh,0)
             break
         case "stage32":
             naoto.mesh.rotation.y = Math.PI/2   
-            naoto.mesh.position.set(-27*unitToVw,30*unitToVw/scrnRatio,0)
+            naoto.mesh.position.set(-27*unitToVw,30*unitToVh,0)
             break
-        case "stage32Submarine":
+        case "popupsSubmarine":
             naoto.mesh.rotation.y = Math.PI/2   
-            naoto.mesh.position.set(-2*unitToVw, 16*unitToVw/scrnRatio,0)
+            naoto.mesh.position.set(0*unitToVw, 20*unitToVh,0)
             cam.left = -1/(0.0032*100/15)
             cam.right = 1/(0.0032*100/15)
             cam.top = 1/(0.0032*100/15)/scrnRatio
@@ -183,8 +188,9 @@ function naotoCharInitialization(){
             cam.updateProjectionMatrix()
             break
         case "stage33":
+            naoto.reactiveRig = false
             naoto.mesh.rotation.y = Math.PI/2   
-            naoto.mesh.position.set(-30*unitToVw, -40*unitToVw/scrnRatio,0)
+            naoto.mesh.position.set(-55*unitToVw, -40*unitToVh,0)
             break
         default:
             break
@@ -339,7 +345,6 @@ const naotoAnimSequences = {
             }, [], `+=${charMoveDuration(naoto, "run", -8, 0)}`)
             tl.call(() => {
                 if (naoto.localVars.stage24Appearance){
-                    console.log(naoto.localVars.stage24Appearance)
                     canvas.value.style.display = "none"
                     emit("resetScreen")
                 }
@@ -420,6 +425,7 @@ const naotoAnimSequences = {
             let tl = gsap.timeline()
             naoto.animPlaying = true
             props.animSequenceProp = null
+            naoto.mesh.position.set(-2*unitToVw, 16*unitToVh,0)
             tl.call(() => {
                 charMove(naoto, "drop", 1, -23.5/scrnRatio)
             }, [], "+=1.3")
@@ -430,7 +436,21 @@ const naotoAnimSequences = {
         }
     },
     stage33Init: ()=>{
-        naoto.reactiveRig = true
+        if (!naoto.animPlaying){
+            
+            let tl = gsap.timeline()
+            naoto.animPlaying = true
+            props.animSequenceProp = null
+            tl.call(() => {
+                charMove(naoto, "run", 30, 0)
+            }, [], "+=0")
+            tl.call(() => {
+                charMove(naoto, "idle", 0, 0)
+                naoto.reactiveRig = true
+                naoto.animPlaying = false
+                emit("naotoPosUpdate", 1)
+            }, [], `+=${charMoveDuration(naoto, "run", 30, 0)}`)
+        }
     },
     stage33Yes: ()=>{
         props.animSequenceProp = null
@@ -455,10 +475,31 @@ const naotoAnimSequences = {
             tl.call(() => {
                 charMove(naoto, "idle", 0, 0)
                 naoto.reactiveRig = false
+            }, [], "+=0.5")
+            tl.call(() => {
+                charMove(naoto, "fear", 0, 0)
+            }, [], `+=4.5`)
+            tl.call(() => {
+                charMove(naoto, "stabbed", -20, 0)
+            }, [], `+=5.2`)
+            tl.call(() => {
+                emit("naotoPosUpdate", 4)
                 naoto.animPlaying = false
-            }, [], "+=0")
+            }, [], `+=${charMoveDuration(naoto, "stabbed", -20, 0)}`)
         }
     },
+    stage33StabbedInSubmarine: ()=>{
+        if (!naoto.animPlaying){
+            let tl = gsap.timeline()
+            naoto.animPlaying = true
+            props.animSequenceProp = null
+            naoto.mesh.position.set(12.5*unitToVw, -7.5*unitToVh,0)
+            charMove(naoto, "stabbed", -20, 0)
+            tl.call(() => {
+                naoto.animPlaying = false
+            }, [], `+=${charMoveDuration(naoto, "stabbed", -20, 0)}`)
+        }
+    }
 }
 </script>
 <template>

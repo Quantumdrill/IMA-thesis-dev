@@ -14,7 +14,7 @@ const canvas = useTemplateRef("canvasDom")
 let renderer
 const scrnRatio = window.innerWidth/window.innerHeight
 const props = defineProps(["animSequenceProp", "parentComponent", "naotoLocalVarsProp"])
-const emit = defineEmits(["nextButtonActivated", "naotoPosUpdate", "operationButtonOperation", "popupPushedStateUpdate"])
+const emit = defineEmits(["nextButtonActivated", "nekomimiPosUpdate"])
 
 //fps
 const fps = 8
@@ -22,9 +22,10 @@ let accumulatedDelta = 0
 const clock = new THREE.Timer()
 
 //camera
-const camZoomFactor = 26
+const camZoomFactor = 15 //26
+const camDist = 180 
 const cam = new THREE.PerspectiveCamera(camZoomFactor, window.innerWidth/window.innerHeight, 0.1, 1000)
-cam.position.set(0,0,50)
+cam.position.set(0,0,camDist)
 
 //lights
 const backLightFront = new THREE.DirectionalLight(0xffffff, 2)
@@ -40,6 +41,7 @@ const modelLoader = new FBXLoader(loadingManager)
 
 //characters
 const nekomimi = {
+    name: "Nekomimi",
     mesh: null,
     skm: null,
     skeleton: null,
@@ -49,15 +51,16 @@ const nekomimi = {
     animActions: {
     },
     mixer: null,
-    currentAnim: "idle",
+    currentAnim: "stage33After",
     animPlaying: false,
     localVars: {
         stage24Appearance: false,
     },
     reactiveRig: true,
 }
-const unitToVw = 50/8 // height of naoto is 8vw, and 50 units, so 50/8 = 6.25 units per vw
-const animArr = ["stage33"]
+const unitToVw = Math.tan(camZoomFactor/2/180*Math.PI)*camDist / 25 // make sure the character position unit reacts to camera zoom and vw
+const unitToVh = unitToVw/scrnRatio
+const animArr = ["default","stage33","stage33After"]
 const animArrOnce = ["stage33"] // animations that should only play once
 
 //misc
@@ -82,6 +85,7 @@ onMounted(() => {
     
     loadingManager.onLoad = () => {
         nekomimi.skm.material = new THREE.MeshLambertMaterial({color: 0xffffff})
+        nekomimi.mesh.scale.set(scrnRatio, scrnRatio, scrnRatio) // char scales in proportion to vw
         // get bones
         // nekomimi.bones.head = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigneck_head_C0_JT")]
         // nekomimi.bones.upperSpine = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigspine_1_C0_JT")]
@@ -98,7 +102,7 @@ onMounted(() => {
             nekomimi.animActions[anim].loop = THREE.LoopOnce
         }
 
-        nekomimi.animActions.stage33.play()
+        nekomimi.animActions.stage33After.play()
         watch(()=>props.animSequenceProp, () => {
             nekomimiAnimSequences[props.animSequenceProp]()
         })
@@ -136,7 +140,7 @@ function animTick(){
 function nekomimiCharInitialization(){
     switch (props.parentComponent){
         case "stage33":
-            nekomimi.mesh.position.set(-0*unitToVw, -100*unitToVw/scrnRatio,0)
+            nekomimi.mesh.position.set(0*unitToVw, 200*unitToVh, 0) // char's feet on bottom edge
             break
         default:
             break
@@ -150,9 +154,15 @@ const nekomimiAnimSequences = {
             nekomimi.animPlaying = true
             props.animSequenceProp = null
             tl.call(() => {
-                nekomimi.mesh.position.set(-0*unitToVw, -0*unitToVw/scrnRatio,0)
-                charMove(nekomimi, "stage33", 0, 0)
+                nekomimi.mesh.position.set(0*unitToVw, -50*unitToVh+25*unitToVw,0)
+                charMove(nekomimi, "stage33", 0, 0, false, 0)
             }, [], "+=0.5")
+            tl.call(() => {
+                emit("nekomimiPosUpdate", 2)
+            }, [], `+=2.6`)
+            tl.call(() => {
+                charMove(nekomimi, "stage33After", 0, 0)
+            }, [], `+=${charMoveDuration(nekomimi, "stage33", 0, 0)-2.6}`)
         }
     },
 }
