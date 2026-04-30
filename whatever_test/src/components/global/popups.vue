@@ -7,8 +7,10 @@ let buttonDispState = ref(false)
 let textDispState = ref(true)
 let lockedState = ref(false)
 let textDisp = ref("Drag me")
+let buttonText = ref("Snap in place")
 const route = useRoute()
 const chan = new BroadcastChannel("global")
+let hockeyButtonDispState = ref(false)
 
 
 onMounted(()=>{
@@ -26,6 +28,13 @@ chan.onmessage=(e)=>{
             textDisp.value = "Drag me"
         } else if (e.data.popupType===2){
             textDisp.value = "Wait"
+        } else if (e.data.popupType===4){
+            textDisp.value = "Drag me and win the air hockey game!"
+        } else if (e.data.popupType===5){
+            textDisp.value = "Hit me"
+        } else if (e.data.popupType===6){
+            textDispState.value = false
+            hockeyButtonDispState.value = true
         }
     }
 }
@@ -36,21 +45,28 @@ function snapInPlace(){
     textDispState.value = false
 }
 
-
+function goToArtifactChamber(){
+    chan.postMessage({type: "goToArtifactChamber", id:Number(route.params.id)})
+}
 </script>
 <template>
-    <div id="buttonContainer">
-        <p v-if="textDispState">{{textDisp}}</p> 
-        <button v-if="buttonDispState&&!lockedState" @click="snapInPlace()">Snap in place</button> 
+    <div id="body">
+        <p v-if="textDispState" id="textDisp">{{textDisp}}</p> 
+        <button v-if="buttonDispState&&!lockedState" @click="snapInPlace()">{{buttonText}}</button> 
+        <button v-if="hockeyButtonDispState" @click="goToArtifactChamber()">Go to /ArtifactChamber</button> 
     </div>
 </template>
 <style scoped>
-    #buttonContainer{
+    #body{
         position: fixed;
         width: 100%;
         height: 100%;
         display: flex;
         justify-content: center;
         align-items: center;
+    }
+
+    #textDisp{
+        text-align: center;
     }
 </style>

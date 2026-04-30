@@ -21,12 +21,12 @@ export function popupNewInstance(popupID,popups,left,top,vw,popupTick,availableB
             inShape: false,
             inPosPrev: false,
             inShapePrev: false,
-            id: popupID.value
+            id: popupID.value,
         }
         popupID.value += 1
         popups.push(newPopup)
         setTimeout(()=>{
-            chan.postMessage({popupType:2,id:newPopup.id})
+            chan.postMessage({popupType:2,id:newPopup.id,name:newPopup.name})
         },10)
         if (popups.length===1){
             requestAnimationFrame(popupTick)

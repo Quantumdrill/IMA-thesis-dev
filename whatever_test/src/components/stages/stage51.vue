@@ -66,7 +66,7 @@ function nekomimiPosUpdate(pos){
             shakableBodyOnTopDom.value.style.display = "block"
         }, [], "+=0.5")
     } else if (pos===5){ // what happens after nekomimi is defeated
-        router.push("/stage52")
+        router.push("/airHockey")
     }
 }
 

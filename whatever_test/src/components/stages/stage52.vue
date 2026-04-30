@@ -2,40 +2,37 @@
 import {ref, onMounted, useTemplateRef, reactive, watch} from "vue"
 import {useRouter} from "vue-router"
 import { popupNewInstance, popupFixSize, popupFixPosition, popupSnapCheck, popupCloseCheck, bridgeCheck } from "../../functions/popup"
-import Naoto from "../character/Naoto.vue"
+import gsap from "gsap"
 
 let router = useRouter()
 let lorumPlaceholder = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum"
 const browserTopHeight = window.outerHeight - window.innerHeight
+let scrn = {x: screen.availWidth, y:screen.availHeight}
+let availableBridges = reactive({value: 2})
+const popupButton = useTemplateRef("popupButton")
+const hpBarDom = useTemplateRef("hpBarDom")
 const bridges = {
-    left: {
-        dom: useTemplateRef("bridgesLeftDom"),
+    dummy: {
+        dom: useTemplateRef("bridgesDummyDom"),
         highlight: false,
         occupied: false,
         xPos: window.innerWidth*32.5/100,
         yPos: window.innerHeight*48/100+browserTopHeight
     },
-    right: {
-        dom: useTemplateRef("bridgesRightDom"),
-        highlight: false,
-        occupied: false,
-        xPos: window.innerWidth*52.5/100,
-        yPos: window.innerHeight*38/100+browserTopHeight
-    }
 }
-let availableBridges = reactive({value: 2})
-const nextButton = useTemplateRef("nextButton")
-const popupButton = useTemplateRef("popupButton")
-const animSequence = ref(null)
 let popups = []
 let popupID = {value: 0}
 let chan
+
+//level related
+let hp = ref(5)
+let popupWidth = 15*window.innerWidth/100
+let finalPopupSpawned = false
 
 onMounted(() => {
     for (let i=0;i<popups.length;i++){
         popups[i].window.close()
     }
-    nextButton.value.disabled = true
 
     chan = new BroadcastChannel("global")
     chan.onmessage=(e)=>{ //snap popup on message
@@ -49,19 +46,34 @@ onMounted(() => {
             bridges[popup.occupyingBridge].occupied = true
             popup.locked = true
         }
-        if (e.data.type==="handshake"){
-            chan.postMessage({type:"typeInitialize",id:e.data.id,popupType:1})
+        if (e.data.type==="handshake"&&e.data.id===0){
+            chan.postMessage({type:"typeInitialize",id:e.data.id,popupType:4})
+        }
+        if (e.data.type==="handshake"&&e.data.id>0){
+            chan.postMessage({type:"typeInitialize",id:e.data.id,popupType:5})
+        }
+        if (e.data.type==="handshake"&&e.data.id>0&&hp.value===0){
+            chan.postMessage({type:"typeInitialize",id:e.data.id,popupType:6})
+        }
+        if (e.data.type==="goToArtifactChamber"){
+            popups[0].window.close()
+            router.push("/artifactChamber")
         }
     }
-    
-    watch(availableBridges, (e)=>{
-        if (availableBridges.value===0){
-            popupButton.value.disabled = true
-        } else {
-            popupButton.value.disabled = false
-        }
-    })
 
+
+    let tl = gsap.timeline()
+    tl.call(() => {
+        popupNewInstance(popupID,popups,200,200,15,popupTick,availableBridges,chan)
+        gsap.to(hpBarDom.value, {
+            width: "80vw",
+            duration: 2,
+            ease: "none",
+        })
+    }, [])
+    tl.call(() => {
+        spawnNewPopup()
+    }, [], "+=2")
 })
 
 
@@ -70,71 +82,153 @@ function popupTick(){
         cancelAnimationFrame(popupTick)
     }
 
-    // disable dashed border highlight every frame before snap check
-    // can't iterate through popups because the each popup's snap check will overwrite the status of the previous popup snap check
-    for (const [key, value] of Object.entries(bridges)) {
-        value.highlight = false
-    }
 
     //iterate for all opened popups
     popups.forEach((elem,i)=>{ 
         if (document.hasFocus()){
             elem.window.focus()
         }
-        popupCloseCheck(elem,popups,i,bridges,availableBridges)
         popupFixSize(elem.window,15,15)
         if (elem.locked){
             popupFixPosition(elem.window,elem.lockedPositionX,elem.lockedPositionY)
         }
-        popupSnapCheck(elem,bridges)
 
-        // broadcast popup inpositio status to the popup
-        if (elem.inPos!==elem.inPosPrev){ //check if popup inPosition state changes
-            if (elem.inPos===true){
-                chan.postMessage({type:"snapButtonShow",id:elem.id,action:true})
-            } else {
-                chan.postMessage({type:"snapButtonShow",id:elem.id,action:false})
-            }
-        }
-        elem.inPosPrev = elem.inPos
     })
 
-    bridgeHighlightUpdate()
-    if (bridgeCheck(bridges)){
-        animSequence.value = "stage21NextLevel"
+    if (hp.value>0&&popups.length===2){
+        colliderTick()
     }
+
+    if (hp.value===0&&popups.length===2){
+        colliderUpdate()
+    }
+
     requestAnimationFrame(popupTick)
 }
 
+function spawnNewPopup(){
+    let y = Math.random()*scrn.y-15*window.innerHeight/100
+    popupNewInstance(popupID,popups,scrn.x-popupWidth-15,y,15,popupTick,availableBridges,chan)
+    colliderInitialize()
+}
 
-function bridgeHighlightUpdate(){ // update after snap check
-    for (const [key, value] of Object.entries(bridges)) { 
-        value.dom.value.style.borderStyle = "hidden" //erase the dashed borders every frame before checking highlight status
-        if (value.highlight){ //add dashed border if the bridge is highlighted
-            value.dom.value.style.borderStyle = "dashed"
-        }
+function spawnFinalPopup(){
+    popupNewInstance(popupID,popups,80*window.innerWidth/100,80*scrn.y/100,15,popupTick,availableBridges,chan)
+    popups[1].window.vx = -5
+    popups[1].window.vy = 0
+}
+
+function colliderInitialize(){
+    popups[0].window.xp = popups[0].window.screenX
+    popups[0].window.yp = popups[0].window.screenY
+    popups[1].window.vx = -Math.random()*6-9
+    popups[1].window.vy = Math.random()>0.5?-Math.random()*2-9:Math.random()*2+9
+}
+
+function colliderTick(){
+    colliderGetCurrentVelocity()
+    collisionInter()
+    collisionEdge()
+    if (popups.length===2){
+        colliderUpdate()
     }
 }
 
-function nextButtonAction(){
-    for (let i=0;i<popups.length;i++){
-        popups[i].window.close()
+function collisionInter(){
+    if (Math.abs(popups[1].window.screenX-popups[0].window.screenX)<popupWidth&&Math.abs(popups[1].window.screenY-popups[0].window.screenY)<popupWidth){ //detect for collision with driver popup
+        if (Math.abs(popups[1].window.screenX-popups[0].window.screenX)>Math.abs(popups[1].window.screenY-popups[0].window.screenY)){ //detect x or y collision, > meaning x
+            if (popups[1].window.screenX>popups[0].window.screenX){ // p4 to the right of p3
+                popups[1].window.moveTo(popups[0].window.screenX+popupWidth,popups[1].window.screenY)
+                popups[1].window.vx*=-1
+            } else if (popups[1].window.screenX<popups[0].window.screenX){ // p4 to the left of p3
+                popups[1].window.moveTo(popups[0].window.screenX-popupWidth,popups[1].window.screenY)
+                popups[1].window.vx*=-1
+            }   
+        } else {
+            if (popups[1].window.screenY>popups[0].window.screenY){ // p4 to the bottom of p3
+                popups[1].window.moveTo(popups[1].window.screenX,popups[0].window.screenY+popupWidth)
+                popups[1].window.vy*=-1
+            } else if (popups[1].window.screenY<popups[0].window.screenY){ // p4 to the top of p3
+                popups[1].window.moveTo(popups[1].window.screenX,popups[0].window.screenY-popupWidth)
+                popups[1].window.vy*=-1
+            }
+        }
+         
+        popups[1].window.vx += popups[0].window.vx
+        popups[1].window.vy += popups[0].window.vy
     }
-    router.push('/stretchedPopupBridges')
+}
+
+function collisionEdge(){
+    if (popups[1].window.screenX<5||popups[1].window.screenX+popupWidth>scrn.x-15){
+        if (hp.value>0){
+            if (popups[1].window.screenX+popupWidth>scrn.x-15){
+                hpBarUpdate()
+                popups[1].window.close()
+                popups.splice(1,1)
+                availableBridges.value += 1
+                if (hp.value>0){
+                    gsap.delayedCall(0.5,()=>{  
+                        spawnNewPopup()
+                    })
+                }
+            }
+        }
+        if (hp.value===0){
+            let tl = gsap.timeline()
+            tl.call(() => {
+                spawnFinalPopup()
+            }, [], "+=2")
+            tl.call(() => {
+                popups[0].window.close()
+                popups.splice(0,1)
+                availableBridges.value += 1
+            }, [], "+=0.5")
+        }
+    } else if (popups[1].window.screenY<5||popups[1].window.screenY+popupWidth>scrn.y-15){
+        popups[1].window.vy*=-1
+    }
+}
+
+function colliderUpdate(){
+    if (Math.abs(popups[1].window.vx)>20){  // speed limit
+        popups[1].window.vx=Math.abs(popups[1].window.vx)/popups[1].window.vx*20
+    }
+    if (Math.abs(popups[1].window.vy)>20){
+        popups[1].window.vy=Math.abs(popups[1].window.vy)/popups[1].window.vy*20
+    }
+    popups[1].window.moveBy(popups[1].window.vx,popups[1].window.vy)
+    popups[1].window.vx*=0.99 // speed damping
+    popups[1].window.vy*=0.99
+}
+
+function colliderGetCurrentVelocity(){
+    popups[0].window.vx = popups[0].window.screenX - popups[0].window.xp
+    popups[0].window.vy = popups[0].window.screenY - popups[0].window.yp
+    popups[0].window.xp = popups[0].window.screenX
+    popups[0].window.yp = popups[0].window.screenY
+}
+
+function hpBarUpdate(){
+    if (hp.value > 0){
+        gsap.to(hpBarDom.value, {
+            width: "-=16vw",
+            duration: 0.3,
+            ease: "none",
+        })
+        hp.value -= 1
+        if (hp.value <= 0){
+            console.log("won")
+        }
+    }
 }
 
 </script>
 
 <template>
     <div id="body">
-        <button id="popupButton" @click="popupNewInstance(popupID,popups,500,200,15,popupTick,availableBridges,chan)" ref="popupButton">Create a popup window, {{ availableBridges.value }} available</button>
-        <div class="block" id="leftPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
-        <div class="block" id="leftBridge" ref="bridgesLeftDom"></div>
-        <div class="block" id="rightBridge" ref="bridgesRightDom"></div>
-        <button id="nextButton" @click="nextButtonAction" ref="nextButton">next</button>
-        <div class="block" id="rightPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
+        <div id="hpBar" ref="hpBarDom"></div>
     </div>
-    <Naoto id="naoto" :parentComponent="'stage21'" :animSequenceProp="animSequence" @nextButtonActivated="nextButton.disabled = false" />
 </template>
 
 
@@ -144,64 +238,20 @@ function nextButtonAction(){
     position: relative;
 }
 
-#leftPlatform{
-    position: fixed;
-    width: 23vw;
-    height: 35vh;
-    left: 5vw;
-    bottom: 10vh;
-    overflow: hidden;
-}
-
-#rightPlatform{
-    position: fixed;
-    width: 23vw;
-    height: 35vh;
-    right: 5vw;
-    top: 30vh;
-    overflow: hidden;
-}
-
-#leftBridge{
-    position: fixed;
-    box-sizing: border-box;
-    width: 15vw;
-    height: 15vw;
-    left: 32.5vw;
-    top: 48vh;
-    border-style: hidden;
-    border-width: 4px;
-}
-
-#rightBridge{
-    position: fixed;
-    box-sizing: border-box;
-    width: 15vw;
-    height: 15vw;
-    right: 32.5vw;
-    top: 38vh;
-    border-style: hidden;
-    border-width: 4px;
-}
-
 #popupButton{
     position: fixed;
     left: 5vw;
     top: 20vh;
 }
 
-#nextButton{
+#hpBar{
     position: fixed;
-    right: 10vw;
-    top: 25vh;
+    width: 0vw;
+    height: 1vw;
+    bottom: 6vw;
+    left: 10vw;
+    background-color: #600303;
+    z-index: 4;
 }
 
-#nextButton:disabled {
-    color: #aaa;
-}
-
-#naoto{
-    position: fixed;
-    z-index: -2;
-}
 </style>
