@@ -176,7 +176,9 @@ onMounted(() => {
 
 function globalUpdatePerFrame(){
     naoto.mixer.update(1/fps)
-    cookie.mixer.update(1/fps)
+    if (props.parentComponent === "stage7"){
+        cookie.mixer.update(1/fps)
+    }
 
     // place after mixer update to overwrite animated posture
     if (naoto.reactiveRig){
