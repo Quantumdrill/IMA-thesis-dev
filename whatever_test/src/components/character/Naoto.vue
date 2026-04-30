@@ -22,9 +22,35 @@ let accumulatedDelta = 0
 const clock = new THREE.Timer()
 
 //camera
-const camZoomFactor = window.innerWidth*0.0032
-const cam = new THREE.OrthographicCamera(-window.innerWidth/camZoomFactor,window.innerWidth/camZoomFactor,window.innerHeight/camZoomFactor,-window.innerHeight/camZoomFactor,-1000,1000)
-cam.position.set(0,0,50)
+let cam
+let unitToVw
+let unitToVh
+if (props.parentComponent === "stage7") {
+    const camFov = 20
+    const camDist = 800
+    cam = new THREE.PerspectiveCamera(
+        camFov,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+    )
+    cam.position.set(0, 0, camDist)
+    unitToVw = Math.tan(camFov / 2 / 180 * Math.PI) * camDist / 25
+    unitToVh = unitToVw / scrnRatio
+} else {
+    const camZoomFactor = window.innerWidth * 0.0032
+    cam = new THREE.OrthographicCamera(
+        -window.innerWidth / camZoomFactor,
+        window.innerWidth / camZoomFactor,
+        window.innerHeight / camZoomFactor,
+        -window.innerHeight / camZoomFactor,
+        -1000,
+        1000
+    )
+    cam.position.set(0, 0, 50)
+    unitToVw = 50 / 8
+    unitToVh = unitToVw / scrnRatio
+}
 
 //lights
 const backLightFront = new THREE.DirectionalLight(0xffffff, 2)
@@ -57,11 +83,24 @@ const naoto = {
     },
     reactiveRig: false,
 }
-const unitToVw = 50/8 // height of naoto is 8vw, and 50 units, so 50/8 = 6.25 units per vw
-const unitToVh = unitToVw/scrnRatio
-const animArr = ["run", "idle", "leap", "drop", "point", "turn", "stage1", "idea", "push", "walk", "leapReady", "yes", "no", "fear", "stabbed"]
-const animArrOnce = ["leap", "drop", "point", "turn", "stage1", "idea", "leapReady", "stabbed"] // animations that should only play once
-const animArrClamped = ["stage1", "stabbed"] // animations that should only play once and clamp when finished
+const cookie = {
+    name: "Cookie",
+    mesh: null,
+    skm: null,
+    skeleton: null,
+    bones: {},
+    animClips: {
+    },
+    animActions: {
+    },
+    mixer: null,
+    currentAnim: "stage7Idle",
+    animPlaying: false,
+}
+
+const animArr = ["run", "idle", "leap", "drop", "point", "turn", "stage1", "idea", "push", "walk", "leapReady", "yes", "no", "fear", "stabbed", "stage7Idle", "stage7"]
+const animArrOnce = ["leap", "drop", "point", "turn", "stage1", "idea", "leapReady", "stabbed", "stage7"] // animations that should only play once
+const animArrClamped = ["stage1", "stabbed", "stage7"] // animations that should only play once and clamp when finished
 
 //misc
 let mousePos = {
@@ -82,6 +121,11 @@ onMounted(() => {
     for (const anim of animArr){
         loadCharAnim("Naoto", anim, naoto, modelLoader)
     }
+
+    //cookie
+    loadCharSkm("Cookie", cookie, modelLoader)
+    loadCharAnim("Cookie", "stage7Idle", cookie, modelLoader)
+    loadCharAnim("Cookie", "stage7", cookie, modelLoader)
     
     loadingManager.onLoad = () => {
         naoto.skm.material = new THREE.MeshLambertMaterial({color: 0xffffff})
@@ -102,9 +146,26 @@ onMounted(() => {
             naoto.animActions[anim].clampWhenFinished = true
         }
 
+        naoto.animActions.stage7Idle.loop = THREE.LoopPingPong
         naoto.animActions.idle.play()
 
         naotoCharInitialization()
+
+
+        if (props.parentComponent === "stage7"){
+            //cookie
+            cookie.skm.material = new THREE.MeshLambertMaterial({color: 0xffffff})
+            cookie.skm.frustumCulled = false
+            scene.add(cookie.mesh)
+            cookie.mixer = new THREE.AnimationMixer(cookie.mesh)
+            cookie.animActions.stage7Idle = cookie.mixer.clipAction(cookie.animClips.stage7Idle)
+            cookie.animActions.stage7Idle.loop = THREE.LoopPingPong
+            cookie.animActions.stage7 = cookie.mixer.clipAction(cookie.animClips.stage7)
+            cookie.animActions.stage7.loop = THREE.LoopOnce
+            cookie.animActions.stage7.clampWhenFinished = true
+            cookie.animActions.stage7Idle.play()
+        }
+
 
         watch(()=>props.animSequenceProp, () => {
             naotoAnimSequences[props.animSequenceProp]()
@@ -115,12 +176,14 @@ onMounted(() => {
 
 function globalUpdatePerFrame(){
     naoto.mixer.update(1/fps)
+    cookie.mixer.update(1/fps)
 
     // place after mixer update to overwrite animated posture
     if (naoto.reactiveRig){
         reactiveRig()
     }
 
+    cam.updateProjectionMatrix()
     renderer.render(scene,cam)
 }
 
@@ -192,6 +255,11 @@ function naotoCharInitialization(){
             naoto.reactiveRig = false
             naoto.mesh.rotation.y = Math.PI/2   
             naoto.mesh.position.set(-55*unitToVw, -40*unitToVh,0)
+            break
+        case "stage7": 
+            naoto.mesh.position.set(0*unitToVw, -20*unitToVh,0)
+            cookie.mesh.position.set(0*unitToVw, -20*unitToVh,0)
+            charMove(naoto, "stage7Idle", 0, 0, false, 1)
             break
         default:
             break
@@ -499,6 +567,46 @@ const naotoAnimSequences = {
             tl.call(() => {
                 naoto.animPlaying = false
             }, [], `+=${charMoveDuration(naoto, "stabbed", -20, 0)}`)
+        }
+    },
+    stage7: ()=>{
+        if (!naoto.animPlaying){
+            naoto.animPlaying = true
+            props.animSequenceProp = null
+            let tl = gsap.timeline()
+            tl.call(() => {
+                charMove(naoto, "stage7", 0, 0, false, 0)
+                charMove(cookie, "stage7", 0, 0, false, 0)
+                gsap.to(backLightFront.position, {
+                    duration: 6,
+                    y: 30,
+                    z: 10,
+                    ease: "power1.inOut",
+                })
+                gsap.to(backLightBack.position, {
+                    duration: 6,
+                    y: 20,
+                    z: 10,
+                    ease: "power1.inOut",
+                })
+                emit("naotoPosUpdate", 2)
+            }, [], "+=0")
+            tl.to(cam.position, {
+                duration: 5,
+                x: 0,
+                y: -21,
+                z: 22,
+                ease: "power2.inOut",
+            }, "+=2")
+            tl.to(cam, {
+                duration: 5,
+                fov: 100,
+                ease: "power2.in",
+                onUpdate: () => cam.updateProjectionMatrix(),
+            }, "<")
+            tl.call(() => {
+                emit("naotoPosUpdate", 3)
+            }, [], `+=3.3`)
         }
     }
 }

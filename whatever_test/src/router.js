@@ -28,7 +28,7 @@ const routes = [
   { path: "/shield", component: stage51 },
   { path: "/airHockey", component: stage52 },
   { path: "/artifactChamber", component: stage7 },
-  { path: "/endPage", component: endPage },
+  { path: "/thankYou", component: endPage },
   { path: "/popups/:id", component: popups },
   { path: "/popupsSubmarine/:id", component: popupsSubmarine },
 ]
