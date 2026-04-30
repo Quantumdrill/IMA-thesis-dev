@@ -8,15 +8,14 @@ gsap.registerPlugin(MotionPathPlugin)
 import {onMounted, useTemplateRef, watch, ref} from "vue"
 import { LoadingManager } from "three"
 import { loadCharAnim, loadCharSkm, animTransition, charMove, charMoveDuration, getBoneIndex } from "../../functions/char"
-import NekomimiRightArmRef from "./NekomimiRightArmRef.vue"
 import { orientConstraint, pointConstraint, poleVectorConstraint, aimConstraint, create3JointIK } from "../../functions/rig"
 
 const scene = new THREE.Scene()
 const canvas = useTemplateRef("canvasDom")
 let renderer
 const scrnRatio = window.innerWidth/window.innerHeight
-const props = defineProps(["animSequenceProp", "parentComponent", "rightArmRefProp"])
-const emit = defineEmits(["nextButtonActivated", "nekomimiPosUpdate"])
+let props = defineProps(["animSequenceProp", "parentComponent"])
+let emit = defineEmits(["nextButtonActivated", "nekomimiPosUpdate", "screenShake", "hpBarUpdate"])
 
 //fps
 const fps = 8
@@ -60,11 +59,15 @@ const nekomimi = {
             punchStart: false,
             punchPeriod: 3,
             returnPeriod1: 3,
-            returnPeriod2: 6,
-            currentPunchProgess: 0
+            returnPeriod2: 14,
+            currentPunchProgess: 0,
+            parryWindow: false,
+            parried: false,
+            parryListener: null,
+            tl: null,
         }
     },
-    reactiveRig: true,
+    reactiveRig: false,
     anims: {
         x: 0,
         y: 0,
@@ -77,24 +80,19 @@ const nrar = {
     skm: null,
     skeleton: null,
     bones: {},
-    reactiveRig: true,
+    reactiveRig: false,
     anims: {}
 }
 let unitToVw = Math.tan(camFov/2/180*Math.PI)*camDist / 25 // make sure the character position unit reacts to camera zoom and vw
 let unitToVh = unitToVw/scrnRatio
-const animArr = ["default", "stage33", "stage33After", "punch", "punchForTesting", "TPoseForTesting"]
-const animArrOnce = ["stage33"] // animations that should only play once
+const animArr = ["default", "stage33", "stage33After", "punch", "punchForTesting", "TPoseForTesting", "stage51Init", "stage51Wait", "parried"]
+const animArrOnce = ["stage33", "stage51Init", "parried", "punch"] // animations that should only play once
 
 //reactive related
 let mousePos = {
     x: 0,
     y: 0,
 }
-let reactiveFKProp = ref({
-    upperSpine: new THREE.Vector3(),
-    shoulder: new THREE.Vector3(),
-})
-let nrarAnimSequence = ref(null)
 
 onMounted(() => {
     renderer = new THREE.WebGLRenderer({antialias:true,canvas:canvas.value,alpha: true})
@@ -173,7 +171,7 @@ onMounted(() => {
             cube.position.copy(nrar.pv.position)
             // mouse interaction
             nrar.anims.charToCamDist = cam.position.z
-            nrar.anims.charToPointerHoverDist = 35
+            nrar.anims.charToPointerHoverDist = 40
             nrar.anims.planeToCamDist = nrar.anims.charToCamDist - nrar.anims.charToPointerHoverDist
             nrar.anims.wristToFingerTipDist = 1.9
             nrar.anims.camHeight = cam.position.y
@@ -275,6 +273,8 @@ function punchCycleUpdate(){
         } else {
             nekomimi.localVars.stage51.currentPunchProgess += 1
         }
+    } else {
+        nekomimi.localVars.stage51.currentPunchProgess = 0
     }
 }
 
@@ -327,16 +327,29 @@ function nekomimiCharInitialization(){
         case "stage51":
             camFov = 60 //60
             camDist = 50 
-            // nekomimi.mesh.position.set(0*unitToVw, 200*unitToVh, 0)
+            nekomimi.mesh.position.set(0*unitToVw, -50*unitToVh+24*unitToVw,0)
             cam.position.set(0,0,camDist)
             cam.fov = camFov
             cam.updateProjectionMatrix()
             unitToVw = Math.tan(camFov/2/180*Math.PI)*camDist / 25
             unitToVh = unitToVw/scrnRatio
-            nekomimi.localVars.stage51.punchStart = true
-            setTimeout(() => {
-                charMove(nekomimi, "punch", 0, 0, false, 0)
-            }, 125)
+            nekomimiAnimSequences["stage51Init"]()
+            document.addEventListener("click", (e) => {
+                if (nekomimi.localVars.stage51.parryWindow){
+                    nekomimi.localVars.stage51.parried = true
+                    charMove(nekomimi, "parried", 0, 0)
+                    nekomimi.localVars.stage51.punchStart = false
+                    nekomimi.localVars.stage51.currentPunchProgess = 0
+                    nekomimi.localVars.stage51.parryWindow = false
+                    nekomimi.localVars.stage51.tl.kill()
+                    gsap.delayedCall(charMoveDuration(nekomimi, "parried", 0, 0)-0.125, () => {
+                        nekomimi.localVars.stage51.currentPunchProgess = 0
+                        nekomimi.animPlaying = false
+                        nekomimiAnimSequences["stage51OnePunch"]()
+                    })
+                    emit("hpBarUpdate")
+                }
+            })
             break
         default:
             break
@@ -360,6 +373,69 @@ const nekomimiAnimSequences = {
                 charMove(nekomimi, "stage33After", 0, 0)
             }, [], `+=${charMoveDuration(nekomimi, "stage33", 0, 0)-2.6}`)
         }
+    },
+    stage51Init: ()=>{
+        if (!nekomimi.animPlaying){
+            let tl = gsap.timeline()
+            nekomimi.animPlaying = true
+            props.animSequenceProp = null
+            tl.call(() => {
+                charMove(nekomimi, "stage51Init", 0, 0)
+                nekomimi.animPlaying = false
+            }, [], "+=0.5")
+            tl.call(() => {
+                emit("nekomimiPosUpdate", 4)
+            }, [], `+=${charMoveDuration(nekomimi, "stage51Init", 0, 0)-0.9}`)
+            tl.call(() => {
+                charMove(nekomimi, "stage51Wait", 0, 0)
+            }, [], `+=0.9`)
+        }
+    },
+    stage51OnePunch: ()=>{
+        if (!nekomimi.animPlaying){
+            if (nekomimi.localVars.stage51.tl) {
+                nekomimi.localVars.stage51.tl.kill()
+            }
+            nekomimi.localVars.stage51.tl = gsap.timeline()
+            nekomimi.animPlaying = true
+            props.animSequenceProp = null
+            nekomimi.reactiveRig = true
+            nrar.reactiveRig = true
+            nekomimi.localVars.stage51.parried = false
+            nekomimi.localVars.stage51.punchStart = true
+            nekomimi.localVars.stage51.parryWindow = false
+            nekomimi.localVars.stage51.tl.call(() => {
+                charMove(nekomimi, "punch", 0, 0, false, 0)
+            }, [], "+=0.125")
+            nekomimi.localVars.stage51.tl.call(() => {
+                nekomimi.localVars.stage51.parryWindow = true
+            }, [], `+=${(nekomimi.localVars.stage51.punchPeriod-1)*0.125}`)
+            nekomimi.localVars.stage51.tl.call(() => {
+                emit("screenShake")
+            }, [], `+=0.125`)
+            nekomimi.localVars.stage51.tl.call(() => {
+                nekomimi.localVars.stage51.parryWindow = false
+            }, [], `+=0.25`)
+            nekomimi.localVars.stage51.tl.call(() => {
+                if (!nekomimi.localVars.stage51.parried){
+                    nekomimi.localVars.stage51.currentPunchProgess = 0
+                    nekomimi.animPlaying = false
+                    nekomimiAnimSequences["stage51OnePunch"]()
+                    console.log("end")
+                }
+            }, [], `+=${(nekomimi.localVars.stage51.returnPeriod1+nekomimi.localVars.stage51.returnPeriod2-3)*0.125}`)
+        }
+    },
+    stage51End: ()=>{
+        let tl = gsap.timeline()
+        tl.to(nekomimi.mesh.position, {
+            y: "-=100vh",
+            duration: 1,
+            ease: "none",
+        }, "+=0.3")
+        tl.call(() => {
+            emit("nekomimiPosUpdate", 5)
+        }, [])
     },
 }
 

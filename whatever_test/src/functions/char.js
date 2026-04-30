@@ -163,6 +163,12 @@ export function charMoveDuration(charObj, newAnimName, displacementX, displaceme
                 duration = 96*0.125
             }
             break
+        case "stage51Init":
+            duration = 51*0.125
+            break
+        case "parried":
+            duration = 7*0.125
+            break
         default:
             break
     }
