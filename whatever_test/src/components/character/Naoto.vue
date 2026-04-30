@@ -90,8 +90,6 @@ onMounted(() => {
         naoto.bones.upperSpine = naoto.skeleton.bones[getBoneIndex(naoto.skeleton, "Naoto_rigspine_1_C0_JT")]
 
         scene.add(naoto.mesh)
-        
-        naotoCharInitialization()
 
         naoto.mixer = new THREE.AnimationMixer(naoto.mesh)
         for (const anim of animArr){
@@ -105,6 +103,9 @@ onMounted(() => {
         }
 
         naoto.animActions.idle.play()
+
+        naotoCharInitialization()
+
         watch(()=>props.animSequenceProp, () => {
             naotoAnimSequences[props.animSequenceProp]()
         })

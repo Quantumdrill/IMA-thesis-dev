@@ -9,7 +9,7 @@ import {onMounted, useTemplateRef, watch, ref} from "vue"
 import { LoadingManager } from "three"
 import { loadCharAnim, loadCharSkm, animTransition, charMove, charMoveDuration, getBoneIndex } from "../../functions/char"
 import NekomimiRightArmRef from "./NekomimiRightArmRef.vue"
-import { orientConstraint, pointConstraint, poleVectorConstraint, aimConstraint, create3JointIK } from "../../functions/rig"
+import { orientConstraint } from "../../functions/rig"
 
 const scene = new THREE.Scene()
 const canvas = useTemplateRef("canvasDom")
@@ -65,15 +65,6 @@ const nekomimi = {
     },
     loaded: false,
 }
-const nrar = {
-    name: "NekomimiRightArmRef",
-    mesh: null,
-    skm: null,
-    skeleton: null,
-    bones: {},
-    reactiveRig: true,
-    anims: {}
-}
 let unitToVw = Math.tan(camFov/2/180*Math.PI)*camDist / 25 // make sure the character position unit reacts to camera zoom and vw
 let unitToVh = unitToVw/scrnRatio
 const animArr = ["default", "stage33", "stage33After", "punch"]
@@ -104,19 +95,13 @@ onMounted(() => {
         loadCharAnim("Nekomimi", anim, nekomimi, modelLoader)
     }
     
-    loadCharSkm("NekomimiRightArmRef", nrar, modelLoader)
-
     loadingManager.onLoad = () => {
         nekomimi.loaded = true
 
         nekomimi.skm.material = new THREE.MeshLambertMaterial({color: 0xffffff})
         nekomimi.mesh.scale.set(scrnRatio, scrnRatio, scrnRatio) // char scales in proportion to vw
 
-        nrar.skm.material = new THREE.MeshLambertMaterial({color: 0xff0000})
-        nrar.mesh.scale.set(scrnRatio, scrnRatio, scrnRatio) // char scales in proportion to vw
-
         scene.add(nekomimi.mesh)
-        scene.add(nrar.mesh)
 
         nekomimi.mixer = new THREE.AnimationMixer(nekomimi.mesh)
         for (const anim of animArr){
@@ -144,43 +129,10 @@ onMounted(() => {
             nekomimi.bones.lowerArmRollEnd = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_6_R0_JT")]
             nekomimi.bones.hand = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_end_R0_JT")]
 
-            nrar.bones.shoulderParent = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "joint0")]
-            nrar.bones.shoulder = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "joint1")]
-            nrar.bones.elbow = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "joint2")]
-            nrar.bones.hand = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "joint3")]
-            nrar.bones.ikHandle = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "ikHandle")]
-            nrar.bones.rootBone = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "root")]
-            nrar.bones.IkSolver = create3JointIK(nrar.skm,nrar.skeleton,["ikHandle","joint3","joint2","joint1"])
-
-            nrar.pv = new THREE.Object3D()
-            nrar.pv.position.y = -5
-            nrar.pv.position.x = -20
-            // mouse interaction
-            nrar.anims.charToCamDist = cam.position.z
-            nrar.anims.charToPointerHoverDist = 20
-            nrar.anims.planeToCamDist = nrar.anims.charToCamDist - nrar.anims.charToPointerHoverDist
-            nrar.anims.wristToFingerTipDist = 1.9
-            nrar.anims.camHeight = cam.position.y
-            nrar.anims.curserToPointerMultiplier = Math.tan(camFov/2/180*Math.PI)*(nrar.anims.planeToCamDist)
-            nrar.anims.wristRefBaseZ = -2
-            nrar.anims.wristRefBase = new THREE.Vector3(-2,6,nrar.anims.wristRefBaseZ) // a point in the back of the character, the line between the fingertip and this is used to determine the orientation and the position of the wrist
-            nrar.anims.pointerZbase = nrar.anims.charToPointerHoverDist
-            nrar.anims.pointerZ = nrar.anims.pointerZbase
-            nrar.anims.pointerVector = new THREE.Vector3(0,0,nrar.anims.pointerZ)
             document.addEventListener("mousemove", (e) => {
-                nrar.anims.x = (e.clientX/window.innerWidth*2-1)*scrnRatio // get x position -1*ratio to 1*ratio
-                nrar.anims.y = -(e.clientY/window.innerHeight*2-1) // get y position: -1 to 1
-                nrar.anims.pointerY = nrar.anims.y*nrar.anims.curserToPointerMultiplier + nrar.anims.camHeight
-                nrar.anims.pointerX = nrar.anims.x*nrar.anims.curserToPointerMultiplier
-                nrar.anims.pointerVector.setComponent(0,nrar.anims.pointerX)
-                nrar.anims.pointerVector.setComponent(1,nrar.anims.pointerY)
-
-                // nrar.pv.position.x = (nrar.anims.x-1)*2
-                // nrar.pv.position.z = (nrar.anims.x+2)*3
-                // nrar.pv.position.y = (nrar.anims.y+nrar.anims.x)*5
-
                 nekomimi.anims.x = (e.clientX/window.innerWidth*2-1)*scrnRatio // get x position -1*ratio to 1*ratio
                 nekomimi.anims.y = -(e.clientY/window.innerHeight*2-1) // get y position: -1 to 1
+                
             })
         }
 
@@ -201,40 +153,30 @@ function reactiveFK(){
     nekomimi.bones.head.rotation.x = nekomimi.anims.y/20+0.1
     nekomimi.bones.head.rotation.y = nekomimi.anims.x/20
     nekomimi.bones.head.rotation.z = nekomimi.anims.y/30
-
-    // to nrar
-    let claviclePos = new THREE.Vector3().copy(nekomimi.bones.clavicle.getWorldPosition(new THREE.Vector3()))
-    let shoulderPos = new THREE.Vector3().copy(nekomimi.bones.shoulder.getWorldPosition(new THREE.Vector3()))
-    let clavicleRot = nekomimi.bones.clavicle.getWorldQuaternion(new THREE.Quaternion())
-    pointConstraint(claviclePos,nrar.bones.shoulderParent,nrar.bones.rootBone)
-    orientConstraint(clavicleRot,nrar.bones.shoulderParent,nrar.bones.rootBone)
-    pointConstraint(shoulderPos,nrar.bones.shoulder,nrar.bones.shoulderParent)
+    reactiveFKProp.value = {
+        claviclePos: new THREE.Vector3().copy(nekomimi.bones.clavicle.getWorldPosition(new THREE.Vector3())),
+        shoulderPos: new THREE.Vector3().copy(nekomimi.bones.shoulder.getWorldPosition(new THREE.Vector3())),
+        clavicleRot: nekomimi.bones.clavicle.getWorldQuaternion(new THREE.Quaternion())
+    }
 }
 
-function reactiveIKUpdate(){
+function reactiveIKUpdate(e){
     nekomimi.bones.incomingIK = true
-    nekomimi.bones.shoulderNewRotation = new THREE.Euler().copy(nrar.bones.shoulder.rotation)
-    nekomimi.bones.elbowNewRotation = new THREE.Euler().copy(nrar.bones.elbow.rotation)
-    nekomimi.bones.handNewRotation = new THREE.Euler().copy(nrar.bones.hand.rotation)
-
-    nekomimi.bones.shoulder.rotation.copy(nekomimi.bones.shoulderNewRotation)
-    nekomimi.bones.upperArmRollMid.rotation.x = nekomimi.bones.shoulderNewRotation.x*44.8/90
-    nekomimi.bones.upperArmRollEnd.rotation.x = nekomimi.bones.shoulderNewRotation.x*43.2/90
-    nekomimi.bones.elbow.rotation.copy(nekomimi.bones.elbowNewRotation)
-    nekomimi.bones.elbow.rotation.x = nekomimi.bones.shoulderNewRotation.x*2/90
-    nekomimi.bones.hand.rotation.copy(nekomimi.bones.handNewRotation)
+    nekomimi.bones.shoulderNewRotation = e.shoulder
+    nekomimi.bones.elbowNewRotation = e.elbow
+    nekomimi.bones.handNewRotation = new THREE.Euler().copy(e.hand)
 }
 
-function wristPosUpdate(){
-    nrar.anims.wristRefLine = new THREE.Vector3().subVectors(nrar.anims.wristRefBase,nrar.anims.pointerVector) // line from fingertip to the wristRefBase
-    nrar.anims.fingerTipToWristVec = new THREE.Vector3().copy(nrar.anims.wristRefLine).setLength(nrar.anims.wristToFingerTipDist)
-    nrar.anims.wristToFingerTipVec = new THREE.Vector3().copy(nrar.anims.fingerTipToWristVec).negate()
-    nrar.anims.wristCurrentZ = nrar.bones.hand.getWorldPosition(new THREE.Vector3()).z
-    nrar.anims.newWristPos = new THREE.Vector3().addVectors(nrar.anims.pointerVector,nrar.anims.fingerTipToWristVec)
-    pointConstraint(nrar.anims.newWristPos,nrar.bones.ikHandle,nrar.bones.rootBone)
-    
-    nrar.anims.wristUpV = new THREE.Vector3().crossVectors(new THREE.Vector3(-1,0,0),nrar.anims.wristToFingerTipVec).normalize()
-    aimConstraint(nrar.bones.hand,nrar.anims.wristToFingerTipVec,nrar.anims.wristUpV,nrar.bones.elbow,true,new THREE.Vector3(-7,1,0.5),nrar.anims.wristUpV)
+function reactiveIK(){
+    if (nekomimi.bones.incomingIK){
+        nekomimi.bones.shoulder.rotation.copy(nekomimi.bones.shoulderNewRotation)
+        nekomimi.bones.upperArmRollMid.rotation.x = nekomimi.bones.shoulderNewRotation.x*44.8/90
+        nekomimi.bones.upperArmRollEnd.rotation.x = nekomimi.bones.shoulderNewRotation.x*43.2/90
+        nekomimi.bones.elbow.rotation.copy(nekomimi.bones.elbowNewRotation)
+        nekomimi.bones.elbow.rotation.x = nekomimi.bones.shoulderNewRotation.x*2/90
+        nekomimi.bones.hand.rotation.copy(nekomimi.bones.handNewRotation)
+        // console.log(nekomimi.bones.shoulderNewRotation)
+    }
 }
 
 function globalUpdatePerFrame(){
@@ -250,13 +192,7 @@ function globalUpdatePerFrame(){
 
 function reactiveRig(){
     reactiveFK()
-    
-
-    wristPosUpdate()
-    poleVectorConstraint(nrar.bones.ikHandle,nrar.bones.hand,nrar.bones.elbow,nrar.bones.shoulder,nrar.pv,nrar.bones.shoulderParent,new THREE.Euler())
-    nrar.bones.IkSolver.update()
-
-    reactiveIKUpdate()
+    reactiveIK()
 }
 
 function animTick(){
@@ -320,6 +256,14 @@ const nekomimiAnimSequences = {
 }
 </script>
 <template>
+    
+    <div id="nrar" v-show="true">
+        <NekomimiRightArmRef 
+        :animSequenceProp="nrarAnimSequence" 
+        :reactiveFKProp="reactiveFKProp"
+        :parentComponent="'stage51'"
+        @reactiveIK="reactiveIKUpdate" />
+    </div>
     <canvas id="canvas" ref="canvasDom"></canvas>
 </template>
 <style scoped>
@@ -336,6 +280,10 @@ const nekomimiAnimSequences = {
 #canvas{
     width: 100vw;
     height: 100vh;
+    position: fixed;
+}
+
+#nrar{
     position: fixed;
 }
 

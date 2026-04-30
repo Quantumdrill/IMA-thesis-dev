@@ -1,7 +1,6 @@
 <script setup>
 import {ref, onMounted, useTemplateRef, reactive, watch} from "vue"
 import {useRouter, useRoute} from "vue-router"
-import { popupNewInstance, popupFixSize, popupFixPosition, popupSnapCheck, popupCloseCheck, bridgeCheck } from "../../functions/popup"
 import Naoto from "../character/Naoto.vue"
 import Nekomimi from "../character/Nekomimi.vue"
 import gsap from "gsap"
@@ -15,26 +14,15 @@ const nekomimiAnimSequence = ref(null)
 const navItem5DropdownMovableDom = useTemplateRef("navItem5DropdownMovableDom")
 const navItem5DropdownContainerDom = useTemplateRef("navItem5DropdownContainerDom")
 const navItem5TitleContainerDom = useTemplateRef("navItem5TitleContainerDom")
-let popups = []
-let popupID = {value: 0}
-let availableBridges = ref(1)
 let chan
 
 //level related
-let yesOrNo = ref(null)
-let yesOrNoPrev = ref(null)
-let nekomimiVisible = ref(false)
+let nekomimiVisible = ref(true)
 let naotoVisible = ref(true)
 let naotoAnimStage = ref("watching")
 let charPos = ref(0)
-let popupFlyingState = ref(false)
 
 onMounted(() => {
-    for (let i=0;i<popups.length;i++){
-        popups[i].window.close()
-    }
-    nextButtonDom.value.disabled = true
-
     chan = new BroadcastChannel("global")
     chan.onmessage=(e)=>{ //snap popup on message
         if (e.data.type==="handshake"){
@@ -42,116 +30,13 @@ onMounted(() => {
         }
     }
     
-    setTimeout(() => {
-        naotoAnimSequence.value = "stage33Init"
-    }, 1000)
-    
-    watch(yesOrNo, (e)=>{
-        if (charPos.value===1){
-            yesOrNoPrev.value = yesOrNo.value 
-            setTimeout(()=>{ // prevent immediate change
-                if (yesOrNoPrev.value === e && naotoAnimStage.value === "watching"){
-                    if (e===true){
-                        naotoAnimSequence.value = "stage33Yes"
-                    } else if (e===false){
-                        naotoAnimSequence.value = "stage33No"
-                    } else if (e===null){
-                        naotoAnimSequence.value = "stage33Idle"
-                    }
-                }
-            }, 200)
-        }
-    })
+    // setTimeout(() => {
+    //     naotoAnimSequence.value = "stage33Init"
+    // }, 1000)
 
-    watch(
-        () => route.query.uninvitedGuest,
-        (newValue) => {
-            if (newValue === "false") {
-                router.push('/shield')
-            }
-        },
-        {
-            immediate: true
-        }
-    )
 })
 
-
-function popupTick(){
-    if (popups.length<1){
-        cancelAnimationFrame(popupTick)
-    }
-
-    //iterate for all opened popups
-    popups.forEach((elem,i)=>{ 
-        if (document.hasFocus()){
-            elem.window.focus()
-        }
-        popupFixSize(elem.window,15,15)
-        if (elem.locked){
-            popupFixPosition(elem.window,elem.lockedPositionX,elem.lockedPositionY)
-        }
-    })
-
-    //stabbed popup update
-    if (popupFlyingState.value===true){
-        popups[0].lockedPositionX -= 1*window.innerWidth/100
-        if (popups[0].window.screenX <= 5){
-            popupFlyingState.value = false
-            popups[0].window.close()
-        }
-    }
-    requestAnimationFrame(popupTick)
-}
-
 function nekomimiPosUpdate(pos){
-    if (pos===2){ // what happens after nekomimi is summoned
-        let tl = gsap.timeline()
-        tl.to(navItem5DropdownContainerDom.value, {
-            y: "-15vw",
-            duration: 0.2,
-            ease: "power2.inOut",
-            onComplete: () => {
-                navItem5DropdownContainerDom.value.style.display = "none"
-                navItem5TitleContainerDom.value.style.backgroundColor = "#484848"
-            }
-        })
-        tl.call(() => {
-            nextButtonDom.value.style.display = "none"
-            nextButtonDom.value.style.bottom = "16vw"
-            nextButtonDom.value.style.right = "12vw"
-            nextButtonDom.value.disabled = false
-        }, [], "+=5.4")
-        tl.call(() => {
-            popupNewInstance(popupID,popups,5*window.innerWidth/100,90*window.innerHeight/100+browserTopHeight-15*window.innerWidth/100,15,popupTick,availableBridges,chan,'popupsSubmarine')
-            popups[0].lockedPositionX = 5*window.innerWidth/100
-            popups[0].lockedPositionY = 90*window.innerHeight/100+browserTopHeight-15*window.innerWidth/100
-            popups[0].locked = true
-        }, [], "+=0.2")
-        tl.call(() => {
-            nextButtonDom.value.style.display = "block"
-            nextButtonDom.value.style.rotate = "-10deg"
-        }, [], "+=1.3")
-        tl.to(nextButtonDom.value, {
-            x: "-65vw",
-            y: "+8vw",
-            ease: "none",
-            duration: 0.1,
-            onComplete: () => {
-                // nextButtonDom.value.style.rotate = "20deg"
-                chan.postMessage({type:"stage33PopupComm",id:popups[0].id,action:"stabbed"})
-            }
-        })
-        tl.to(nextButtonDom.value, {
-            x: "+40vw",
-            y: "-15vw",
-            ease: "none",
-            duration: 0.1,
-        })
-        tl.call(() => {
-            popupFlyingState.value = true
-        }, [], "+=0.5")
-    } 
 }
 
 function naotoPosUpdate(pos){
@@ -177,6 +62,13 @@ function artifactMapClickAction(){
     
 }
 
+
+
+
+
+
+
+
 </script>
 
 <template>
@@ -189,7 +81,7 @@ function artifactMapClickAction(){
         </header>
         <nav>
             <div id="navTitlesBackground"></div>
-            <div class="navItem" id="navItem1" @mouseenter="yesOrNo = false" @mouseleave="yesOrNo = null">
+            <div class="navItem" id="navItem1">
                 <div class="navItemTitleContainer"><p class="navItemTitle">placeholder1</p></div>
                 <div class="navItemDropdownContainer" id="navItem1DropdownContainer">
                     <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 1</p></div>
@@ -197,7 +89,7 @@ function artifactMapClickAction(){
                     <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 3</p></div>
                 </div>
             </div>
-            <div id="navItem2" class="navItem" @mouseenter="yesOrNo = false" @mouseleave="yesOrNo = null">
+            <div id="navItem2" class="navItem">
                 <div class="navItemTitleContainer"><p class="navItemTitle">placeholder2</p></div>
                 <div class="navItemDropdownContainer" id="navItem2DropdownContainer">
                     <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 1</p></div>
@@ -205,7 +97,7 @@ function artifactMapClickAction(){
                     <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 3</p></div>
                 </div>
             </div>
-                <div id="navItem3" class="navItem" @mouseenter="yesOrNo = false" @mouseleave="yesOrNo = null">
+                <div id="navItem3" class="navItem">
                 <div class="navItemTitleContainer"><p class="navItemTitle">placeholder3</p></div>
                 <div class="navItemDropdownContainer" id="navItem3DropdownContainer">
                     <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 1</p></div>
@@ -213,7 +105,7 @@ function artifactMapClickAction(){
                     <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 3</p></div>
                 </div>
             </div>
-            <div id="navItem4" class="navItem" @mouseenter="yesOrNo = false" @mouseleave="yesOrNo = null">
+            <div id="navItem4" class="navItem">
                 <div class="navItemTitleContainer"><p class="navItemTitle">placeholder4</p></div>
                 <div class="navItemDropdownContainer" id="navItem4DropdownContainer">
                     <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 1</p></div>
@@ -229,8 +121,6 @@ function artifactMapClickAction(){
                         <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Site Map</p></div>
                         <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Shield</p></div>
                         <div class="navItemDropdownItemContainer" 
-                        @mouseenter="yesOrNo = true" 
-                        @mouseleave="yesOrNo = null" 
                         @click="artifactMapClickAction"
                         ><p class="navItemDropdownItemText">Artifact Map</p></div>
                         <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Browser</p></div>
@@ -238,17 +128,19 @@ function artifactMapClickAction(){
                 </div>
             </div>
         </nav>
-        <button id="nextButton" @click="nextButtonAction" ref="nextButtonDom">next</button>
         <div id="footer">
             <div id="footerText">Copyright © 2026 Web Waypoint, All Rights Reserved</div>
         </div>
     </div>
-    <Naoto id="naoto" v-show="naotoVisible" :parentComponent="'stage33'" :animSequenceProp="naotoAnimSequence" @nextButtonActivated="nextButton.disabled = false" @naotoPosUpdate="naotoPosUpdate" />
-    <Nekomimi id="nekomimi" 
-    v-show="nekomimiVisible" 
-    :parentComponent="'stage33'" 
-    :animSequenceProp="nekomimiAnimSequence" 
-    @nekomimiPosUpdate="nekomimiPosUpdate" />
+    <!-- <Naoto id="naoto" v-show="naotoVisible" :parentComponent="'stage51'" :animSequenceProp="naotoAnimSequence" @nextButtonActivated="nextButton.disabled = false" @naotoPosUpdate="naotoPosUpdate" /> -->
+    <div id="nekomimi" v-show="nekomimiVisible">
+        <Nekomimi
+        :parentComponent="'stage51'" 
+        :animSequenceProp="nekomimiAnimSequence" 
+        @nekomimiPosUpdate="nekomimiPosUpdate" />
+    </div>
+    
+    
 </template>
 
 
