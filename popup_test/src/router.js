@@ -7,7 +7,7 @@ import home from './components/home.vue'
 import pretext from './components/pretext.vue'
 
 const routes = [
-  { path: '/', component: pretext },
+  { path: '/', component: home },
   { path: '/popup1', component: popup1 },
   { path: '/popup2', component: popup2 },
   { path: '/popup3', component: popup3 },
