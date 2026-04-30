@@ -57,7 +57,11 @@ const nekomimi = {
     animPlaying: false,
     localVars: {
         stage51: {
-            punchPeriod: 13
+            punchStart: false,
+            punchPeriod: 3,
+            returnPeriod1: 3,
+            returnPeriod2: 6,
+            currentPunchProgess: 0
         }
     },
     reactiveRig: true,
@@ -125,6 +129,9 @@ onMounted(() => {
         const helper2 = new THREE.SkeletonHelper( nrar.mesh );
         // scene.add( helper2 );
 
+        const cube = new THREE.Mesh(new THREE.BoxGeometry(10,10,10), new THREE.MeshBasicMaterial({color: 0x00ff00}))
+        // scene.add(cube)
+
         nekomimi.mixer = new THREE.AnimationMixer(nekomimi.mesh)
         for (const anim of animArr){
             nekomimi.animActions[anim] = nekomimi.mixer.clipAction(nekomimi.animClips[anim])
@@ -160,17 +167,20 @@ onMounted(() => {
             nrar.bones.IkSolver = create3JointIK(nrar.skm,nrar.skeleton,["ikHandle","joint3","joint2","joint1"])
 
             nrar.pv = new THREE.Object3D()
-            nrar.pv.position.y = -5
-            nrar.pv.position.x = -20
+            nrar.pv.position.y = 10
+            nrar.pv.position.x = -300
+            nrar.pv.position.z = -200
+            cube.position.copy(nrar.pv.position)
             // mouse interaction
             nrar.anims.charToCamDist = cam.position.z
-            nrar.anims.charToPointerHoverDist = 20
+            nrar.anims.charToPointerHoverDist = 35
             nrar.anims.planeToCamDist = nrar.anims.charToCamDist - nrar.anims.charToPointerHoverDist
             nrar.anims.wristToFingerTipDist = 1.9
             nrar.anims.camHeight = cam.position.y
             nrar.anims.curserToPointerMultiplier = Math.tan(camFov/2/180*Math.PI)*(nrar.anims.planeToCamDist)
-            nrar.anims.wristRefBaseZ = -2
-            nrar.anims.wristRefBase = new THREE.Vector3(-2,6,nrar.anims.wristRefBaseZ) // a point in the back of the character, the line between the fingertip and this is used to determine the orientation and the position of the wrist
+            nrar.anims.wristRefBaseZ = 0
+            nrar.anims.wristRefBase = new THREE.Vector3(-2,0,nrar.anims.wristRefBaseZ) // a point in the back of the character, the line between the fingertip and this is used to determine the orientation and the position of the wrist
+            nrar.anims.travelProgress = 0 //percentage of the travel from wristRefBase to pointerVector
             nrar.anims.pointerZbase = nrar.anims.charToPointerHoverDist
             nrar.anims.pointerZ = nrar.anims.pointerZbase
             nrar.anims.pointerVector = new THREE.Vector3(0,0,nrar.anims.pointerZ)
@@ -199,15 +209,16 @@ onMounted(() => {
 })
 
 function reactiveFK(){
-    nekomimi.bones.upperSpine.rotation.z += nekomimi.anims.x/20
-    nekomimi.bones.upperSpine.rotation.y += nekomimi.anims.x/20
+    nekomimi.bones.upperSpine.rotation.z += nekomimi.anims.x/5+0.1
+    nekomimi.bones.upperSpine.rotation.y += nekomimi.anims.x/15+0.2
     nekomimi.bones.upperSpine.rotation.x += nekomimi.anims.y/20
-    nekomimi.bones.clavicle.rotation.y += nekomimi.anims.x/20
-    nekomimi.bones.clavicle.rotation.x += nekomimi.anims.y/20
-    nekomimi.bones.clavicle.rotation.z += nekomimi.anims.x/20
+    nekomimi.bones.clavicle.rotation.y += nekomimi.anims.x/15
+    nekomimi.bones.clavicle.rotation.x += nekomimi.anims.y/15+0.1
+    nekomimi.bones.clavicle.rotation.z += nekomimi.anims.x/15
     nekomimi.bones.head.rotation.x = nekomimi.anims.y/20+0.1
     nekomimi.bones.head.rotation.y = nekomimi.anims.x/20
     nekomimi.bones.head.rotation.z = nekomimi.anims.y/30
+    nrar.anims.wristRefBase.x = nekomimi.anims.x*8-5
 
     // to nrar
     let claviclePos = new THREE.Vector3().copy(nekomimi.bones.clavicle.getWorldPosition(new THREE.Vector3()))
@@ -227,21 +238,50 @@ function reactiveIKUpdate(){
 }
 
 function wristPosUpdate(){
-    nrar.anims.wristRefLine = new THREE.Vector3().subVectors(nrar.anims.wristRefBase,nrar.anims.pointerVector) // line from fingertip to the wristRefBase
-    nrar.anims.fingerTipToWristVec = new THREE.Vector3().copy(nrar.anims.wristRefLine).setLength(nrar.anims.wristToFingerTipDist)
-    nrar.anims.wristToFingerTipVec = new THREE.Vector3().copy(nrar.anims.fingerTipToWristVec).negate()
-    nrar.anims.wristCurrentZ = nrar.bones.hand.getWorldPosition(new THREE.Vector3()).z
-    nrar.anims.newWristPos = new THREE.Vector3().addVectors(nrar.anims.pointerVector,nrar.anims.fingerTipToWristVec)
+    nrar.anims.wristRefLine = new THREE.Vector3().subVectors(nrar.anims.pointerVector,nrar.anims.wristRefBase) // line from wristRefBase to the fingertip
+    // nrar.anims.fingerTipToWristVec = new THREE.Vector3().copy(nrar.anims.wristRefLine).setLength(nrar.anims.wristToFingerTipDist)
+    // nrar.anims.wristToFingerTipVec = new THREE.Vector3().copy(nrar.anims.fingerTipToWristVec).negate()
+    // nrar.anims.wristCurrentZ = nrar.bones.hand.getWorldPosition(new THREE.Vector3()).z
+    // nrar.anims.newWristPos = new THREE.Vector3().addVectors(nrar.anims.pointerVector,nrar.anims.fingerTipToWristVec)
+    nrar.anims.newWristPos = new THREE.Vector3().addVectors(nrar.anims.wristRefLine.clone().multiplyScalar(nrar.anims.travelProgress),nrar.anims.wristRefBase)
     pointConstraint(nrar.anims.newWristPos,nrar.bones.ikHandle,nrar.bones.rootBone)
     
-    nrar.anims.wristUpV = new THREE.Vector3().crossVectors(new THREE.Vector3(-1,0,0),nrar.anims.wristToFingerTipVec).normalize()
-    aimConstraint(nrar.bones.hand,nrar.anims.wristToFingerTipVec,nrar.anims.wristUpV,nrar.bones.elbow,true,new THREE.Vector3(-7,1,0.5),nrar.anims.wristUpV)
+    // nrar.anims.wristUpV = new THREE.Vector3().crossVectors(new THREE.Vector3(-1,0,0),nrar.anims.wristToFingerTipVec).normalize()
+    // aimConstraint(nrar.bones.hand,nrar.anims.wristToFingerTipVec,nrar.anims.wristUpV,nrar.bones.elbow,true,new THREE.Vector3(-7,1,0.5),nrar.anims.wristUpV)
+}
+
+function punchCycleUpdate(){
+    if (nekomimi.localVars.stage51.punchStart){
+        if (nekomimi.localVars.stage51.currentPunchProgess === 0){
+            let tl = gsap.timeline()
+            tl.to(nrar.anims, {
+                travelProgress: 1, 
+                duration: nekomimi.localVars.stage51.punchPeriod*0.125, 
+                ease: "power2.in",
+            })
+            tl.to(nrar.anims, {
+                travelProgress: 0.9, 
+                duration: nekomimi.localVars.stage51.returnPeriod1*0.125, 
+                ease: "power1.in",
+            })
+            tl.to(nrar.anims, {
+                travelProgress: 0, 
+                duration: nekomimi.localVars.stage51.returnPeriod2*0.125, 
+                ease: "power1.out",
+            })
+            nekomimi.localVars.stage51.currentPunchProgess += 1
+        } else if (nekomimi.localVars.stage51.currentPunchProgess === nekomimi.localVars.stage51.punchPeriod+nekomimi.localVars.stage51.returnPeriod1+nekomimi.localVars.stage51.returnPeriod2){
+            nekomimi.localVars.stage51.currentPunchProgess = 0
+        } else {
+            nekomimi.localVars.stage51.currentPunchProgess += 1
+        }
+    }
 }
 
 function reactiveRig(){
     reactiveFK()
     
-
+    punchCycleUpdate()
     wristPosUpdate()
     poleVectorConstraint(nrar.bones.ikHandle,nrar.bones.hand,nrar.bones.elbow,nrar.bones.shoulder,nrar.pv,nrar.bones.shoulderParent,new THREE.Euler())
     nrar.bones.IkSolver.update()
@@ -293,7 +333,10 @@ function nekomimiCharInitialization(){
             cam.updateProjectionMatrix()
             unitToVw = Math.tan(camFov/2/180*Math.PI)*camDist / 25
             unitToVh = unitToVw/scrnRatio
-            charMove(nekomimi, "punch", 0, 0, false, 0)
+            nekomimi.localVars.stage51.punchStart = true
+            setTimeout(() => {
+                charMove(nekomimi, "punch", 0, 0, false, 0)
+            }, 125)
             break
         default:
             break

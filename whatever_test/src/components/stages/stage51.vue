@@ -63,12 +63,6 @@ function artifactMapClickAction(){
 }
 
 
-
-
-
-
-
-
 </script>
 
 <template>
