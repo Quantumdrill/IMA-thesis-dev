@@ -77,12 +77,13 @@ export function aimConstraint(obj,target,upv,parent=new THREE.Vector3(0,0,0),tar
     upV.normalize()
     targetV.normalize()
     let sideV = new THREE.Vector3().crossVectors(upV,targetV).normalize()
+    let upVOrtho = new THREE.Vector3().crossVectors(targetV,sideV).normalize() // orthogonal upV adjusted based on upV and targetV, if upV is not orthogonal to targetV.
     frontA.normalize()
     upA.normalize()
     let sideA = new THREE.Vector3().crossVectors(upA,frontA).normalize()
     //axis offset is the offset from the desired front & up basic to the default basic of z front and y up
     let axisOffset = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(sideA,upA,frontA)).invert()
-    let aimQuat = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(sideV,upV,targetV)).multiply(axisOffset)
+    let aimQuat = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(sideV,upVOrtho,targetV)).multiply(axisOffset)
     orientConstraint(aimQuat,obj,parent)
 }
 

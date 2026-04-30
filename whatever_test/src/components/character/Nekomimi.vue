@@ -56,7 +56,9 @@ const nekomimi = {
     currentAnim: "stage33After",
     animPlaying: false,
     localVars: {
-        stage24Appearance: false,
+        stage51: {
+            punchPeriod: 13
+        }
     },
     reactiveRig: true,
     anims: {
@@ -76,7 +78,7 @@ const nrar = {
 }
 let unitToVw = Math.tan(camFov/2/180*Math.PI)*camDist / 25 // make sure the character position unit reacts to camera zoom and vw
 let unitToVh = unitToVw/scrnRatio
-const animArr = ["default", "stage33", "stage33After", "punch"]
+const animArr = ["default", "stage33", "stage33After", "punch", "punchForTesting", "TPoseForTesting"]
 const animArrOnce = ["stage33"] // animations that should only play once
 
 //reactive related
@@ -116,7 +118,12 @@ onMounted(() => {
         nrar.mesh.scale.set(scrnRatio, scrnRatio, scrnRatio) // char scales in proportion to vw
 
         scene.add(nekomimi.mesh)
-        scene.add(nrar.mesh)
+        // scene.add(nrar.mesh)
+
+        const helper = new THREE.SkeletonHelper( nekomimi.mesh );
+        // scene.add( helper );
+        const helper2 = new THREE.SkeletonHelper( nrar.mesh );
+        // scene.add( helper2 );
 
         nekomimi.mixer = new THREE.AnimationMixer(nekomimi.mesh)
         for (const anim of animArr){
@@ -212,17 +219,11 @@ function reactiveFK(){
 }
 
 function reactiveIKUpdate(){
-    nekomimi.bones.incomingIK = true
-    nekomimi.bones.shoulderNewRotation = new THREE.Euler().copy(nrar.bones.shoulder.rotation)
-    nekomimi.bones.elbowNewRotation = new THREE.Euler().copy(nrar.bones.elbow.rotation)
-    nekomimi.bones.handNewRotation = new THREE.Euler().copy(nrar.bones.hand.rotation)
-
-    nekomimi.bones.shoulder.rotation.copy(nekomimi.bones.shoulderNewRotation)
-    nekomimi.bones.upperArmRollMid.rotation.x = nekomimi.bones.shoulderNewRotation.x*44.8/90
-    nekomimi.bones.upperArmRollEnd.rotation.x = nekomimi.bones.shoulderNewRotation.x*43.2/90
-    nekomimi.bones.elbow.rotation.copy(nekomimi.bones.elbowNewRotation)
-    nekomimi.bones.elbow.rotation.x = nekomimi.bones.shoulderNewRotation.x*2/90
-    nekomimi.bones.hand.rotation.copy(nekomimi.bones.handNewRotation)
+    nekomimi.bones.lowerArmRollStart.rotation.set(0,0,0)
+    nekomimi.bones.lowerArmRollStart.position.set(0,0,0)
+    nekomimi.bones.lowerArmRollStart.position.x = -0.143
+    aimConstraint(nekomimi.bones.shoulder,nrar.bones.elbow,new THREE.Vector3(0,1,0),nekomimi.bones.clavicle,false,new THREE.Vector3(-1,0,0),new THREE.Vector3(0,0,-1))
+    aimConstraint(nekomimi.bones.elbow,nrar.bones.hand,new THREE.Vector3(0,1,0),nekomimi.bones.upperArmRollEnd,false,new THREE.Vector3(-1,0,0),new THREE.Vector3(0,0,-1))
 }
 
 function wristPosUpdate(){
@@ -237,17 +238,6 @@ function wristPosUpdate(){
     aimConstraint(nrar.bones.hand,nrar.anims.wristToFingerTipVec,nrar.anims.wristUpV,nrar.bones.elbow,true,new THREE.Vector3(-7,1,0.5),nrar.anims.wristUpV)
 }
 
-function globalUpdatePerFrame(){
-    nekomimi.mixer.update(1/fps)
-
-    // place after mixer update to overwrite animated posture
-    if (nekomimi.reactiveRig&&nekomimi.loaded){
-        reactiveRig()
-    }
-
-    renderer.render(scene,cam)
-}
-
 function reactiveRig(){
     reactiveFK()
     
@@ -257,6 +247,17 @@ function reactiveRig(){
     nrar.bones.IkSolver.update()
 
     reactiveIKUpdate()
+}
+
+function globalUpdatePerFrame(){
+    nekomimi.mixer.update(1/fps)
+
+    // place after mixer update to overwrite animated posture
+    if (nekomimi.reactiveRig&&nekomimi.loaded){
+        reactiveRig()
+    }
+
+    renderer.render(scene,cam)
 }
 
 function animTick(){
@@ -274,7 +275,7 @@ function animTick(){
 function nekomimiCharInitialization(){
     switch (props.parentComponent){
         case "stage33":
-            camFov = 15 //26
+            camFov = 15
             camDist = 180 
             nekomimi.mesh.position.set(0*unitToVw, 200*unitToVh, 0)
             cam.position.set(0,0,camDist)
@@ -284,7 +285,7 @@ function nekomimiCharInitialization(){
             unitToVh = unitToVw/scrnRatio
             break
         case "stage51":
-            camFov = 60 //26
+            camFov = 60 //60
             camDist = 50 
             // nekomimi.mesh.position.set(0*unitToVw, 200*unitToVh, 0)
             cam.position.set(0,0,camDist)
@@ -292,7 +293,7 @@ function nekomimiCharInitialization(){
             cam.updateProjectionMatrix()
             unitToVw = Math.tan(camFov/2/180*Math.PI)*camDist / 25
             unitToVh = unitToVw/scrnRatio
-            charMove(nekomimi, "punch", 0, 0)
+            charMove(nekomimi, "punch", 0, 0, false, 0)
             break
         default:
             break
@@ -318,6 +319,7 @@ const nekomimiAnimSequences = {
         }
     },
 }
+
 </script>
 <template>
     <canvas id="canvas" ref="canvasDom"></canvas>
