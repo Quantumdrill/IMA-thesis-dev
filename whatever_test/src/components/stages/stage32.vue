@@ -168,7 +168,7 @@ function nextButtonAction(){
     for (let i=0;i<popups.length;i++){
         popups[i].window.close()
     }
-    router.push('/waypoint')
+    router.push('/morePopups')
 }
 
 function naotoPosUpdate(pos){
@@ -180,7 +180,7 @@ function naotoPosUpdate(pos){
 <template>
     <div id="body">
         <button id="popupButton" @click="popupNewInstance(popupID,popups,500,200,15,popupTick,availableBridges,chan,'popupsSubmarine')" ref="popupButton">Create a popup window, {{ availableBridges.value }} available</button>
-        <div class="block" id="leftPlatform">{{ lorumPlaceholder }}</div>
+        <div class="block" id="leftPlatform">Unlike static pages, forums made the web feel inhabited. A visitor could return to the same thread and find that it had changed. The page became a conversation, and the conversation became part of the landscape.</div>
         <div class="block" id="startBridge" ref="bridgeStartDom"></div>
         <div class="block" id="endBridge" ref="bridgeEndDom"></div>
         <button id="nextButton" @click="nextButtonAction" ref="nextButton">next</button>

@@ -128,11 +128,15 @@ function nextButtonAction(){
 <template>
     <div id="body">
         <button id="popupButton" @click="popupNewInstance(popupID,popups,500,200,15,popupTick,availableBridges,chan)" ref="popupButton">Create a popup window, {{ availableBridges.value }} available</button>
-        <div class="block" id="leftPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
+        <div class="block" id="leftPlatform">Before the World Wide Web, computer networks were developed to allow distant machines to exchange information. Projects such as ARPANET demonstrated that data could be divided into packets, sent across different routes, and reassembled at its destination. These systems created the technical foundation for later forms of online communication.
+
+            <br><br>The early network was used mainly by researchers, universities, laboratories, and government institutions. It was not yet a public space in the modern sense. Access was limited, interfaces were technical, and navigation required knowledge of specific commands and addresses.</div>
         <div class="block" id="leftBridge" ref="bridgesLeftDom"></div>
         <div class="block" id="rightBridge" ref="bridgesRightDom"></div>
         <button id="nextButton" @click="nextButtonAction" ref="nextButton">next</button>
-        <div class="block" id="rightPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
+        <div class="block" id="rightPlatform">Hypertext is a method of organizing information through linked documents. Instead of reading in a fixed linear order, a user may follow connections from one piece of text to another. This idea became one of the central principles of the web.
+
+            <br><br>Earlier hypertext systems explored the possibility of non-linear writing, reference networks, and interactive documents. The web later transformed this concept into a global structure, where any page could point toward another through a hyperlink.</div>
     </div>
     <Naoto id="naoto" :parentComponent="'stage21'" :animSequenceProp="animSequence" @nextButtonActivated="nextButton.disabled = false" />
 </template>

@@ -597,7 +597,7 @@ const naotoAnimSequences = {
                 duration: 5,
                 x: 0,
                 y: -21,
-                z: 22,
+                z: 20,
                 ease: "power2.inOut",
             }, "+=2")
             tl.to(cam, {

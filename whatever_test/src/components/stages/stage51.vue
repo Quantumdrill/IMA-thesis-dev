@@ -138,16 +138,16 @@ function shieldClickAction(){
         <nav>
             <div id="navTitlesBackground"></div>
             <div class="navItem" id="navItem1">
-                <div class="navItemTitleContainer"><p class="navItemTitle">placeholder1</p></div>
+                <div class="navItemTitleContainer"><p class="navItemTitle">Authentication</p></div>
             </div>
             <div id="navItem2" class="navItem">
-                <div class="navItemTitleContainer"><p class="navItemTitle">placeholder2</p></div>
+                <div class="navItemTitleContainer"><p class="navItemTitle">Transit</p></div>
             </div>
                 <div id="navItem3" class="navItem">
-                <div class="navItemTitleContainer"><p class="navItemTitle">placeholder3</p></div>
+                <div class="navItemTitleContainer"><p class="navItemTitle">Maintainance</p></div>
             </div>
             <div id="navItem4" class="navItem">
-                <div class="navItemTitleContainer"><p class="navItemTitle">placeholder4</p></div>
+                <div class="navItemTitleContainer"><p class="navItemTitle">Entertainment</p></div>
             </div>
             <div id="navItem5" class="navItem">
                 <div class="navItemTitleContainer" ref="navItem5TitleContainerDom"><p class="navItemTitle">Traveller Tools</p></div>

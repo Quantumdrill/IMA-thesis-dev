@@ -114,7 +114,7 @@ function nextButtonAction(){
     for (let i=0;i<popups.length;i++){
         popups[i].window.close()
     }
-    router.push('/submarine')
+    router.push('/waypoint')
 }
 
 requestAnimationFrame(tick60fps)
@@ -131,7 +131,9 @@ requestAnimationFrame(tick60fps)
         animSequence = 'stage31Go';
         " ref="popupButton">Create a popup window</button>
         <div class="block" id="platform">
-            <div class="block" id="platformText">{{ lorumPlaceholder }}</div>
+            <div class="block" id="platformText">As the web matured, page design became more complex. Tables, frames, stylesheets, scripts, and later responsive layouts changed how information was arranged on screen. The page was no longer only a document; it became an interface.
+
+            <br><br>Design decisions shaped how users moved. Menus, buttons, columns, banners, sidebars, and footers created paths of attention. The structure of a page began to guide behavior as much as its written content did.</div>
         </div>
         <div class="block" id="bridge" ref="bridgeDom"></div>
         <div id="footer">

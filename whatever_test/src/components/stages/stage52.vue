@@ -25,9 +25,8 @@ let popupID = {value: 0}
 let chan
 
 //level related
-let hp = ref(5)
+let hp = ref(8)
 let popupWidth = 15*window.innerWidth/100
-let finalPopupSpawned = false
 
 onMounted(() => {
     for (let i=0;i<popups.length;i++){
@@ -164,14 +163,14 @@ function collisionEdge(){
         if (hp.value>0){
             if (popups[1].window.screenX+popupWidth>scrn.x-15){
                 hpBarUpdate()
-                popups[1].window.close()
-                popups.splice(1,1)
-                availableBridges.value += 1
-                if (hp.value>0){
-                    gsap.delayedCall(0.5,()=>{  
-                        spawnNewPopup()
-                    })
-                }
+            }
+            popups[1].window.close()
+            popups.splice(1,1)
+            availableBridges.value += 1
+            if (hp.value>0){
+                gsap.delayedCall(0.5,()=>{  
+                    spawnNewPopup()
+                })
             }
         }
         if (hp.value===0){
@@ -212,7 +211,7 @@ function colliderGetCurrentVelocity(){
 function hpBarUpdate(){
     if (hp.value > 0){
         gsap.to(hpBarDom.value, {
-            width: "-=16vw",
+            width: "-=10vw",
             duration: 0.3,
             ease: "none",
         })

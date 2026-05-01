@@ -123,10 +123,14 @@ function nextButtonAction(){
 <template>
     <div id="body">
         <button id="popupButton" @click="popupNewInstance(popupID,popups,500,200,15,popupTick,availableBridges,chan)" ref="popupButton">Create a popup window, {{ availableBridges.value }} available</button>
-        <div class="block" id="leftPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
+        <div class="block" id="leftPlatform">The World Wide Web was proposed as a system for sharing information across networked computers. It combined three major elements: addresses for locating resources, a transfer protocol for requesting documents, and a markup language for structuring pages.
+
+<br><br>This combination allowed documents to be published, linked, and viewed across different machines. The web began as a practical information system, but quickly developed into a public environment for communication, commerce, entertainment, archives, and personal expression.</div>
         <div class="block" id="centerBridge" ref="bridgesCenterDom"></div>
         <button id="nextButton" @click="nextButtonAction" ref="nextButton">next</button>
-        <div class="block" id="rightPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
+        <div class="block" id="rightPlatform">Early web pages were mostly text-based documents. They used simple markup to define headings, paragraphs, lists, and links. Images and advanced layouts were limited, and pages often appeared as plain collections of information rather than designed visual spaces.
+
+            <br><br>Despite their simplicity, early pages introduced a new form of publishing. A document could be uploaded to a server and reached from another location through a browser. The page became both a document and a place.</div>
     </div>
     <Naoto id="naoto" :parentComponent="'stage22'" :animSequenceProp="animSequence" @nextButtonActivated="nextButton.disabled = false" />
 </template>

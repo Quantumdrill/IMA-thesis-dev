@@ -69,19 +69,25 @@ function naotoPosUpdate(pos){
 }
 
 function nextButtonAction(){
-    router.push('/morePopups')
+    router.push('/submarine')
 }
 
 </script>
 <template>
     <div id="body" ref="bodyDom"></div>
     <button id="appearanceButton" @click="changeAppearance" ref="appearanceButton">{{!appearance?"Light":"Dark"}} Mode</button>
-    <div class="block" v-if="appearance" id="initBPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
-    <div class="block" v-if="!appearance" id="leftUpperWPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
-    <div class="block" v-if="!appearance" id="rightUpperWPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
-    <div class="block" v-if="appearance" id="midBPlatform">{{ lorumPlaceholder.repeat(3) }}</div>
-    <div class="block" v-if="appearance" id="rightLowerWPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
-    <div class="block" v-if="appearance" id="leftLowerWPlatform">{{ lorumPlaceholder.repeat(2) }}</div>
+    <div class="block" v-if="appearance" id="initBPlatform">The web browser became the main vehicle for traveling through the web. It translated code into visible pages, allowed users to follow links, and provided interface elements such as the address bar, back button, bookmarks, tabs, and scrollbars.</div>
+    <div class="block" v-if="!appearance" id="leftUpperWPlatform">As browsers developed, they became more than document viewers. They turned into platforms capable of running scripts, displaying media, storing local data, and supporting complex applications. For many users, the browser became the primary entrance to the digital world.}}</div>
+    <div class="block" v-if="!appearance" id="rightUpperWPlatform">Web portals attempted to organize the growing web into central starting points. They offered search, news, weather, email, directories, entertainment links, and other services from a single page.</div>
+    <div class="block" v-if="appearance" id="midBPlatform">As the number of web pages increased, search engines became necessary tools for navigation. They indexed pages, ranked results, and allowed users to find information without knowing exact addresses.
+
+<br><br>Search changed the structure of online movement. Instead of traveling only through links, users could begin with a question, keyword, or phrase. The search box became a gateway, and visibility within search results became a form of territory.
+
+<br><br>Personal homepages were an important part of early web culture. Users created pages to introduce themselves, collect links, share interests, publish diaries, display images, or experiment with design.
+
+<br><br>These pages were often handmade, uneven, and expressive. They treated the web as a personal space rather than only a commercial or institutional system. Many used bright colors, animated images, guestbooks, counters, tiled backgrounds, and informal writing.</div>
+    <div class="block" v-if="appearance" id="rightLowerWPlatform">The portal treated the web as a city that needed a main station. From one interface, users could depart toward different categories of information. For a time, portals shaped how many visitors understood the web: less as an open wilderness, more as a mapped public square.</div>
+    <div class="block" v-if="appearance" id="leftLowerWPlatform">Forums and message boards allowed users to gather around shared topics. Discussions were organized into threads, with replies accumulating over time. These spaces created persistent communities where knowledge, jokes, arguments, and identities could develop.</div>
     <button id="nextButton" @click="nextButtonAction" ref="nextButton">next</button>
     <ResetScreen v-if="resetScreenState" ref="resetScreenDom"/>
     <Naoto id="naoto" :parentComponent="'stage24'" 

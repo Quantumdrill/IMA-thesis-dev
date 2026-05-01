@@ -2,6 +2,7 @@
 
 import * as THREE from "three"
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js'
+// import textureLoader from 'three/examples/jsm/loaders/TextureLoader.js'
 import {gsap} from "gsap"
 import MotionPathPlugin from "gsap/MotionPathPlugin"
 gsap.registerPlugin(MotionPathPlugin)
@@ -39,6 +40,7 @@ scene.add(cam,backLightFront,backLightBack,ambientLight)
 //loader
 const loadingManager = new LoadingManager()
 const modelLoader = new FBXLoader(loadingManager)
+const texLoader = new THREE.TextureLoader(loadingManager)
 
 //characters
 const nekomimi = {
@@ -73,6 +75,10 @@ const nekomimi = {
         y: 0,
     },
     loaded: false,
+    textures: {
+        smile: null,
+        angry: null,
+    },
 }
 const nrar = {
     name: "NekomimiRightArmRef",
@@ -110,6 +116,9 @@ onMounted(() => {
     
     loadCharSkm("NekomimiRightArmRef", nrar, modelLoader)
 
+    nekomimi.textures.smile  = texLoader.load("/src/assets/imgs/Nekomimi_smile.png")
+    nekomimi.textures.angry = texLoader.load("/src/assets/imgs/Nekomimi_angry.png")
+
     loadingManager.onLoad = () => {
         nekomimi.loaded = true
 
@@ -119,6 +128,7 @@ onMounted(() => {
         nrar.skm.material = new THREE.MeshLambertMaterial({color: 0xff0000})
         nrar.mesh.scale.set(scrnRatio, scrnRatio, scrnRatio) // char scales in proportion to vw
 
+        
         scene.add(nekomimi.mesh)
         // scene.add(nrar.mesh)
 
@@ -323,6 +333,7 @@ function nekomimiCharInitialization(){
             cam.updateProjectionMatrix()
             unitToVw = Math.tan(camFov/2/180*Math.PI)*camDist / 25
             unitToVh = unitToVw/scrnRatio
+            nekomimi.skm.material.map = nekomimi.textures.angry
             break
         case "stage51":
             camFov = 60 //60
@@ -333,6 +344,7 @@ function nekomimiCharInitialization(){
             cam.updateProjectionMatrix()
             unitToVw = Math.tan(camFov/2/180*Math.PI)*camDist / 25
             unitToVh = unitToVw/scrnRatio
+            nekomimi.skm.material.map = nekomimi.textures.angry
             nekomimiAnimSequences["stage51Init"]()
             document.addEventListener("click", (e) => {
                 if (nekomimi.localVars.stage51.parryWindow){
@@ -371,6 +383,7 @@ const nekomimiAnimSequences = {
             }, [], `+=2.6`)
             tl.call(() => {
                 charMove(nekomimi, "stage33After", 0, 0)
+                nekomimi.skm.material.map = nekomimi.textures.smile
             }, [], `+=${charMoveDuration(nekomimi, "stage33", 0, 0)-2.6}`)
         }
     },

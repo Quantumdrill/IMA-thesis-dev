@@ -28,8 +28,10 @@ let naotoVisible = ref(true)
 let naotoAnimStage = ref("watching")
 let charPos = ref(0)
 let popupFlyingState = ref(false)
+let urlPromptVisible = ref(false)
 
 onMounted(() => {
+
     for (let i=0;i<popups.length;i++){
         popups[i].window.close()
     }
@@ -44,6 +46,7 @@ onMounted(() => {
     
     setTimeout(() => {
         naotoAnimSequence.value = "stage33Init"
+        
     }, 1000)
     
     watch(yesOrNo, (e)=>{
@@ -151,6 +154,9 @@ function nekomimiPosUpdate(pos){
         tl.call(() => {
             popupFlyingState.value = true
         }, [], "+=0.5")
+        tl.call(() => {
+            urlPromptVisible.value = true
+        }, [], "+=3")
     } 
 }
 
@@ -190,35 +196,35 @@ function artifactMapClickAction(){
         <nav>
             <div id="navTitlesBackground"></div>
             <div class="navItem" id="navItem1" @mouseenter="yesOrNo = false" @mouseleave="yesOrNo = null">
-                <div class="navItemTitleContainer"><p class="navItemTitle">placeholder1</p></div>
+                <div class="navItemTitleContainer"><p class="navItemTitle">Authentication</p></div>
                 <div class="navItemDropdownContainer" id="navItem1DropdownContainer">
-                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 1</p></div>
-                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 2</p></div>
-                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 3</p></div>
+                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Captcha</p></div>
+                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Guest Pass</p></div>
                 </div>
             </div>
             <div id="navItem2" class="navItem" @mouseenter="yesOrNo = false" @mouseleave="yesOrNo = null">
-                <div class="navItemTitleContainer"><p class="navItemTitle">placeholder2</p></div>
+                <div class="navItemTitleContainer"><p class="navItemTitle">Transit</p></div>
                 <div class="navItemDropdownContainer" id="navItem2DropdownContainer">
-                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 1</p></div>
-                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 2</p></div>
-                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 3</p></div>
+                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Redirect</p></div>
+                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Links</p></div>
+                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Embeds</p></div>
                 </div>
             </div>
                 <div id="navItem3" class="navItem" @mouseenter="yesOrNo = false" @mouseleave="yesOrNo = null">
-                <div class="navItemTitleContainer"><p class="navItemTitle">placeholder3</p></div>
+                <div class="navItemTitleContainer"><p class="navItemTitle">Maintainance</p></div>
                 <div class="navItemDropdownContainer" id="navItem3DropdownContainer">
-                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 1</p></div>
-                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 2</p></div>
-                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 3</p></div>
+                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Errors</p></div>
+                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Cache Cleanup</p></div>
+                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Bug Reports</p></div>
+                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Patches</p></div>
                 </div>
             </div>
             <div id="navItem4" class="navItem" @mouseenter="yesOrNo = false" @mouseleave="yesOrNo = null">
-                <div class="navItemTitleContainer"><p class="navItemTitle">placeholder4</p></div>
+                <div class="navItemTitleContainer"><p class="navItemTitle">Entertainment</p></div>
                 <div class="navItemDropdownContainer" id="navItem4DropdownContainer">
-                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 1</p></div>
-                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 2</p></div>
-                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">dropdown item 3</p></div>
+                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Media</p></div>
+                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Live Stream</p></div>
+                    <div class="navItemDropdownItemContainer"><p class="navItemDropdownItemText">Community</p></div>
                 </div>
             </div>
             <div id="navItem5" class="navItem">
@@ -238,6 +244,7 @@ function artifactMapClickAction(){
                 </div>
             </div>
         </nav>
+        <div id="urlPrompt" v-if="urlPromptVisible">Try modify the URL</div>
         <button id="nextButton" @click="nextButtonAction" ref="nextButtonDom">next</button>
         <div id="footer">
             <div id="footerText">Copyright © 2026 Web Waypoint, All Rights Reserved</div>
@@ -439,5 +446,16 @@ nav{
 
 #nekomimi{
     position: fixed;
+}
+
+#urlPrompt{
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    left: 40vw;
+    top: 5vh;
+    color: #de7d7d;
+    font-size: 1.5vw;
+    z-index: 10;
 }
 </style>
