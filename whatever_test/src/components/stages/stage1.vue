@@ -61,7 +61,7 @@ The artifact is usually interpreted as a sign of withheld space. It implies that
 Its origin remains uncertain. Some accounts describe it as a fragment of an early session, preserved after the closing of a page. Others treat it as a devotional offering left at the threshold of the web space, given only to those willing to acknowledge the terms of entry.
 
 The object is often displayed near entrances, banners, and lower margins, where visitors are asked to accept or refuse it. In later interpretations, the Holy Cookie came to symbolize the strange hospitality of the web: generous, intimate, and quietly transactional.</p>
-                    <button id="button3" @click="router.push('/popupBridges')">Hunt The Cookie Now!</button>
+                    <button id="button3" @click="router.push('/popupBridges')">Seek The Cookie Now!</button>
                 </div>
             </div>
         </div>
