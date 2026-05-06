@@ -28,12 +28,14 @@ let unitToVh
 if (props.parentComponent === "stage7") {
     const camFov = 20
     const camDist = 800
+    const camZoom = scrnRatio/2.2
     cam = new THREE.PerspectiveCamera(
         camFov,
         window.innerWidth / window.innerHeight,
         0.1,
         1000
     )
+    cam.zoom = camZoom
     cam.position.set(0, 0, camDist)
     unitToVw = Math.tan(camFov / 2 / 180 * Math.PI) * camDist / 25
     unitToVh = unitToVw / scrnRatio

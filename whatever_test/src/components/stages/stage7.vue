@@ -9,6 +9,7 @@ const router = useRouter()
 
 let initialized = false
 const animSequence = ref(null)
+const naotoDom = useTemplateRef("naotoDom")
 const cookieFrameContainerDom = useTemplateRef("cookieFrameContainerDom")
 const cookieBoxDom = useTemplateRef("cookieBoxDom")
 const loadingState = ref(true)
@@ -16,6 +17,10 @@ const loadingState = ref(true)
 window.onload = () => {
     window.scrollTo(0,0)
 }
+
+onMounted(() => {
+    naotoDom.value.$el.style.bottom = `-${0.08*window.innerWidth+(2.15-window.innerWidth/window.innerHeight)*120}px`
+})
 
 function naotoPosUpdate(pos){
     if (pos===2){
@@ -34,10 +39,10 @@ function naotoPosUpdate(pos){
 }
 
 window.addEventListener("scroll", (e) => {
-    if (window.scrollY > 170*window.innerWidth/100 && !initialized){
-        animSequence.value = "stage7"
-        initialized = true
-    }
+    // if (window.scrollY > 170*window.innerWidth/100 && !initialized){
+    //     animSequence.value = "stage7"
+    //     initialized = true
+    // }
 })
 </script>
 <template>
@@ -71,7 +76,9 @@ window.addEventListener("scroll", (e) => {
             </div>
             <h2 id="cookieTitle">The Holy Cookie</h2>
         </div>
-        <Naoto id="naoto" :parentComponent="'stage7'" 
+        <Naoto id="naoto" 
+        ref="naotoDom"
+        :parentComponent="'stage7'" 
         :animSequenceProp="animSequence" 
         :naotoLocalVarsProp="naotoLocalVars" 
         @naotoPosUpdate="naotoPosUpdate"
