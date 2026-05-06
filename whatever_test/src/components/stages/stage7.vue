@@ -34,10 +34,10 @@ function naotoPosUpdate(pos){
 }
 
 window.addEventListener("scroll", (e) => {
-    // if (window.scrollY > 20*window.innerWidth/100+window.innerHeight*3 && !initialized){
-    //     animSequence.value = "stage7"
-    //     initialized = true
-    // }
+    if (window.scrollY > 170*window.innerWidth/100 && !initialized){
+        animSequence.value = "stage7"
+        initialized = true
+    }
 })
 </script>
 <template>
@@ -170,7 +170,7 @@ h2 {
     bottom: -8vw;
     left: 0;
     width: 100vw;
-    height: 100vh;
+    height: 50vw;
     z-index: 1;
 }
 
@@ -180,13 +180,14 @@ button{
 
 #cookieBox{
     position: fixed;
-    bottom: -21vh;
+    bottom: -10.5vw;
     right: 10vw;
     width: 20vw;
     height: 10vw;
     z-index: 2;
     display: flex;
     border-style: solid;
+    background-color: #ffffff;
     flex-direction: column;
     justify-content: center;
     align-items: center;
