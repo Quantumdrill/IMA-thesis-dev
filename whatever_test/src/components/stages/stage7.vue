@@ -3,6 +3,7 @@ import {useRouter} from "vue-router"
 import { ref, onMounted, useTemplateRef } from "vue"
 import Naoto from "../character/Naoto.vue"
 import gsap from "gsap"
+import Loading from "../global/loading.vue"
 
 const router = useRouter()
 
@@ -10,11 +11,11 @@ let initialized = false
 const animSequence = ref(null)
 const cookieFrameContainerDom = useTemplateRef("cookieFrameContainerDom")
 const cookieBoxDom = useTemplateRef("cookieBoxDom")
+const loadingState = ref(true)
 
 window.onload = () => {
     window.scrollTo(0,0)
 }
-
 
 function naotoPosUpdate(pos){
     if (pos===2){
@@ -34,7 +35,6 @@ function naotoPosUpdate(pos){
 
 window.addEventListener("scroll", (e) => {
     if (window.scrollY > 20*window.innerWidth/100+window.innerHeight*3 && !initialized){
-        console.log("scroll")
         animSequence.value = "stage7"
         initialized = true
     }
@@ -75,6 +75,7 @@ window.addEventListener("scroll", (e) => {
         :animSequenceProp="animSequence" 
         :naotoLocalVarsProp="naotoLocalVars" 
         @naotoPosUpdate="naotoPosUpdate"
+        @naotoLoadingUpdate="loadingState = false"
         />
     </div>
     <div id="cookieBox" ref="cookieBoxDom">
@@ -85,6 +86,7 @@ window.addEventListener("scroll", (e) => {
             <button id="cookieThankButton" class="cookieButton" @click="router.push('/thankYou')">Thank You</button>
         </div>
     </div>
+    <Loading v-if="loadingState"/>
 </template>
 <style scoped>
 #page {
@@ -165,7 +167,7 @@ h2 {
 
 #naoto{
     position: absolute;
-    top: calc(350vh + 24.5vw);
+    bottom: -8vw;
     left: 0;
     width: 100vw;
     height: 100vh;

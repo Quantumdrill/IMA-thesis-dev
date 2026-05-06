@@ -16,7 +16,7 @@ const canvas = useTemplateRef("canvasDom")
 let renderer
 const scrnRatio = window.innerWidth/window.innerHeight
 let props = defineProps(["animSequenceProp", "parentComponent"])
-let emit = defineEmits(["nextButtonActivated", "nekomimiPosUpdate", "screenShake", "hpBarUpdate"])
+let emit = defineEmits(["nextButtonActivated", "nekomimiPosUpdate", "screenShake", "hpBarUpdate", "nekomimiLoadingUpdate"])
 
 //fps
 const fps = 8
@@ -101,6 +101,8 @@ let mousePos = {
 }
 
 onMounted(() => {
+    loadingManager.abort()
+
     renderer = new THREE.WebGLRenderer({antialias:true,canvas:canvas.value,alpha: true})
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.setPixelRatio(window.devicePixelRatio)
@@ -120,102 +122,126 @@ onMounted(() => {
     nekomimi.textures.angry = texLoader.load("/src/assets/imgs/Nekomimi_angry.png")
 
     loadingManager.onLoad = () => {
-        nekomimi.loaded = true
-
-        nekomimi.skm.material = new THREE.MeshLambertMaterial({color: 0xffffff})
-        nekomimi.mesh.scale.set(scrnRatio, scrnRatio, scrnRatio) // char scales in proportion to vw
-
-        nrar.skm.material = new THREE.MeshLambertMaterial({color: 0xff0000})
-        nrar.mesh.scale.set(scrnRatio, scrnRatio, scrnRatio) // char scales in proportion to vw
-
-        
-        scene.add(nekomimi.mesh)
-        // scene.add(nrar.mesh)
-
-        const helper = new THREE.SkeletonHelper( nekomimi.mesh );
-        // scene.add( helper );
-        const helper2 = new THREE.SkeletonHelper( nrar.mesh );
-        // scene.add( helper2 );
-
-        const cube = new THREE.Mesh(new THREE.BoxGeometry(10,10,10), new THREE.MeshBasicMaterial({color: 0x00ff00}))
-        // scene.add(cube)
-
-        nekomimi.mixer = new THREE.AnimationMixer(nekomimi.mesh)
-        for (const anim of animArr){
-            nekomimi.animActions[anim] = nekomimi.mixer.clipAction(nekomimi.animClips[anim])
-        }
-        for (const anim of animArrOnce){
-            nekomimi.animActions[anim].loop = THREE.LoopOnce
-        }
-
-        nekomimi.animActions.stage33After.play()
-     
-        nekomimiCharInitialization()
-
-        if (props.parentComponent == "stage51"){
-            // get bones
-            nekomimi.bones.head = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigneck_head_C0_JT")]
-            nekomimi.bones.upperSpine = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigspine_1_C0_JT")]
-            nekomimi.bones.clavicle = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigspine_2_C0_JT")]
-            nekomimi.bones.shoulder = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_0_R0_JT")]
-            nekomimi.bones.upperArmRollMid = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_1_R0_JT")]
-            nekomimi.bones.upperArmRollEnd = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_2_R0_JT")]
-            nekomimi.bones.elbow = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_3_R0_JT")]
-            nekomimi.bones.lowerArmRollStart = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_4_R0_JT")]
-            nekomimi.bones.lowerArmRollMid = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_5_R0_JT")]
-            nekomimi.bones.lowerArmRollEnd = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_6_R0_JT")]
-            nekomimi.bones.hand = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_end_R0_JT")]
-
-            nrar.bones.shoulderParent = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "joint0")]
-            nrar.bones.shoulder = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "joint1")]
-            nrar.bones.elbow = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "joint2")]
-            nrar.bones.hand = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "joint3")]
-            nrar.bones.ikHandle = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "ikHandle")]
-            nrar.bones.rootBone = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "root")]
-            nrar.bones.IkSolver = create3JointIK(nrar.skm,nrar.skeleton,["ikHandle","joint3","joint2","joint1"])
-
-            nrar.pv = new THREE.Object3D()
-            nrar.pv.position.y = 10
-            nrar.pv.position.x = -300
-            nrar.pv.position.z = -200
-            cube.position.copy(nrar.pv.position)
-            // mouse interaction
-            nrar.anims.charToCamDist = cam.position.z
-            nrar.anims.charToPointerHoverDist = 40
-            nrar.anims.planeToCamDist = nrar.anims.charToCamDist - nrar.anims.charToPointerHoverDist
-            nrar.anims.wristToFingerTipDist = 1.9
-            nrar.anims.camHeight = cam.position.y
-            nrar.anims.curserToPointerMultiplier = Math.tan(camFov/2/180*Math.PI)*(nrar.anims.planeToCamDist)
-            nrar.anims.wristRefBaseZ = 0
-            nrar.anims.wristRefBase = new THREE.Vector3(-2,0,nrar.anims.wristRefBaseZ) // a point in the back of the character, the line between the fingertip and this is used to determine the orientation and the position of the wrist
-            nrar.anims.travelProgress = 0 //percentage of the travel from wristRefBase to pointerVector
-            nrar.anims.pointerZbase = nrar.anims.charToPointerHoverDist
-            nrar.anims.pointerZ = nrar.anims.pointerZbase
-            nrar.anims.pointerVector = new THREE.Vector3(0,0,nrar.anims.pointerZ)
-            document.addEventListener("mousemove", (e) => {
-                nrar.anims.x = (e.clientX/window.innerWidth*2-1)*scrnRatio // get x position -1*ratio to 1*ratio
-                nrar.anims.y = -(e.clientY/window.innerHeight*2-1) // get y position: -1 to 1
-                nrar.anims.pointerY = nrar.anims.y*nrar.anims.curserToPointerMultiplier + nrar.anims.camHeight
-                nrar.anims.pointerX = nrar.anims.x*nrar.anims.curserToPointerMultiplier
-                nrar.anims.pointerVector.setComponent(0,nrar.anims.pointerX)
-                nrar.anims.pointerVector.setComponent(1,nrar.anims.pointerY)
-
-                // nrar.pv.position.x = (nrar.anims.x-1)*2
-                // nrar.pv.position.z = (nrar.anims.x+2)*3
-                // nrar.pv.position.y = (nrar.anims.y+nrar.anims.x)*5
-
-                nekomimi.anims.x = (e.clientX/window.innerWidth*2-1)*scrnRatio // get x position -1*ratio to 1*ratio
-                nekomimi.anims.y = -(e.clientY/window.innerHeight*2-1) // get y position: -1 to 1
-            })
-        }
-
-        watch(()=>props.animSequenceProp, () => {
-            nekomimiAnimSequences[props.animSequenceProp]()
-        })
-        animTick()
+        nekomimiLoadedInitializationCheck()
     }
 })
 
+function nekomimiLoadedInitializationCheck(){
+    if (
+        nekomimi.mesh &&
+        nekomimi.skm &&
+        nekomimi.skeleton &&
+        nrar.mesh &&
+        nrar.skm &&
+        nrar.skeleton &&
+        Object.keys(nekomimi.animClips).length === animArr.length
+    ){
+        nekomimiLoadedInitialization()
+    } else {
+        requestAnimationFrame(nekomimiLoadedInitializationCheck)
+    }
+}
+
+function nekomimiLoadedInitialization(){
+    emit("nekomimiLoadingUpdate")
+    cancelAnimationFrame(nekomimiLoadedInitializationCheck)
+
+    nekomimi.loaded = true
+
+    nekomimi.skm.material = new THREE.MeshLambertMaterial({color: 0xffffff})
+    nekomimi.mesh.scale.set(scrnRatio, scrnRatio, scrnRatio) // char scales in proportion to vw
+
+    nrar.skm.material = new THREE.MeshLambertMaterial({color: 0xff0000})
+    nrar.mesh.scale.set(scrnRatio, scrnRatio, scrnRatio) // char scales in proportion to vw
+
+    
+    scene.add(nekomimi.mesh)
+    // scene.add(nrar.mesh)
+
+    const helper = new THREE.SkeletonHelper( nekomimi.mesh );
+    // scene.add( helper );
+    const helper2 = new THREE.SkeletonHelper( nrar.mesh );
+    // scene.add( helper2 );
+
+    const cube = new THREE.Mesh(new THREE.BoxGeometry(10,10,10), new THREE.MeshBasicMaterial({color: 0x00ff00}))
+    // scene.add(cube)
+
+    nekomimi.mixer = new THREE.AnimationMixer(nekomimi.mesh)
+    for (const anim of animArr){
+        nekomimi.animActions[anim] = nekomimi.mixer.clipAction(nekomimi.animClips[anim])
+    }
+    for (const anim of animArrOnce){
+        nekomimi.animActions[anim].loop = THREE.LoopOnce
+    }
+
+    nekomimi.animActions.stage33After.play()
+    
+    nekomimiCharInitialization()
+
+    if (props.parentComponent == "stage51"){
+        // get bones
+        nekomimi.bones.head = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigneck_head_C0_JT")]
+        nekomimi.bones.upperSpine = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigspine_1_C0_JT")]
+        nekomimi.bones.clavicle = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigspine_2_C0_JT")]
+        nekomimi.bones.shoulder = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_0_R0_JT")]
+        nekomimi.bones.upperArmRollMid = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_1_R0_JT")]
+        nekomimi.bones.upperArmRollEnd = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_2_R0_JT")]
+        nekomimi.bones.elbow = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_3_R0_JT")]
+        nekomimi.bones.lowerArmRollStart = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_4_R0_JT")]
+        nekomimi.bones.lowerArmRollMid = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_5_R0_JT")]
+        nekomimi.bones.lowerArmRollEnd = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_6_R0_JT")]
+        nekomimi.bones.hand = nekomimi.skeleton.bones[getBoneIndex(nekomimi.skeleton, "Nekomimi_rigarm_end_R0_JT")]
+
+        nrar.bones.shoulderParent = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "joint0")]
+        nrar.bones.shoulder = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "joint1")]
+        nrar.bones.elbow = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "joint2")]
+        nrar.bones.hand = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "joint3")]
+        nrar.bones.ikHandle = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "ikHandle")]
+        nrar.bones.rootBone = nrar.skeleton.bones[getBoneIndex(nrar.skeleton, "root")]
+        nrar.bones.IkSolver = create3JointIK(nrar.skm,nrar.skeleton,["ikHandle","joint3","joint2","joint1"])
+
+        nrar.pv = new THREE.Object3D()
+        nrar.pv.position.y = 10
+        nrar.pv.position.x = -300
+        nrar.pv.position.z = -200
+        cube.position.copy(nrar.pv.position)
+        // mouse interaction
+        nrar.anims.charToCamDist = cam.position.z
+        nrar.anims.charToPointerHoverDist = 40
+        nrar.anims.planeToCamDist = nrar.anims.charToCamDist - nrar.anims.charToPointerHoverDist
+        nrar.anims.wristToFingerTipDist = 1.9
+        nrar.anims.camHeight = cam.position.y
+        nrar.anims.curserToPointerMultiplier = Math.tan(camFov/2/180*Math.PI)*(nrar.anims.planeToCamDist)
+        nrar.anims.wristRefBaseZ = 0
+        nrar.anims.wristRefBase = new THREE.Vector3(-2,0,nrar.anims.wristRefBaseZ) // a point in the back of the character, the line between the fingertip and this is used to determine the orientation and the position of the wrist
+        nrar.anims.travelProgress = 0 //percentage of the travel from wristRefBase to pointerVector
+        nrar.anims.pointerZbase = nrar.anims.charToPointerHoverDist
+        nrar.anims.pointerZ = nrar.anims.pointerZbase
+        nrar.anims.pointerVector = new THREE.Vector3(0,0,nrar.anims.pointerZ)
+        document.addEventListener("mousemove", (e) => {
+            nrar.anims.x = (e.clientX/window.innerWidth*2-1)*scrnRatio // get x position -1*ratio to 1*ratio
+            nrar.anims.y = -(e.clientY/window.innerHeight*2-1) // get y position: -1 to 1
+            nrar.anims.pointerY = nrar.anims.y*nrar.anims.curserToPointerMultiplier + nrar.anims.camHeight
+            nrar.anims.pointerX = nrar.anims.x*nrar.anims.curserToPointerMultiplier
+            nrar.anims.pointerVector.setComponent(0,nrar.anims.pointerX)
+            nrar.anims.pointerVector.setComponent(1,nrar.anims.pointerY)
+
+            // nrar.pv.position.x = (nrar.anims.x-1)*2
+            // nrar.pv.position.z = (nrar.anims.x+2)*3
+            // nrar.pv.position.y = (nrar.anims.y+nrar.anims.x)*5
+
+            nekomimi.anims.x = (e.clientX/window.innerWidth*2-1)*scrnRatio // get x position -1*ratio to 1*ratio
+            nekomimi.anims.y = -(e.clientY/window.innerHeight*2-1) // get y position: -1 to 1
+        })
+    }
+
+    watch(()=>props.animSequenceProp, () => {
+        nekomimiAnimSequences[props.animSequenceProp]()
+    })
+    animTick()
+}
+
+//reactive related
 function reactiveFK(){
     nekomimi.bones.upperSpine.rotation.z += nekomimi.anims.x/5+0.1
     nekomimi.bones.upperSpine.rotation.y += nekomimi.anims.x/15+0.2

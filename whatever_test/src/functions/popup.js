@@ -7,7 +7,7 @@ export function openPopup(popupID,left,top,vw,popupComponent){
         `popup${popupID.value}`,  //provide different names to open multiple popups
         `left=${left},top=${top},width=500,height=500`
     )
-    newWindow.resizeTo(window.outerWidth*vw/100*1.04,window.outerWidth*vw/100*1.02)
+    newWindow.resizeTo(window.innerWidth*vw/100*1.04,window.innerWidth*vw/100*1.02)
     return newWindow
 }
 
@@ -38,8 +38,8 @@ export function popupNewInstance(popupID,popups,left,top,vw,popupTick,availableB
 }
 
 export function popupFixSize(popupWin,vwX,vwY){
-    let targetWidthInPx = window.outerWidth*vwX/100
-    let targetHeightInPx = window.outerWidth*vwY/100
+    let targetWidthInPx = window.innerWidth*vwX/100
+    let targetHeightInPx = window.innerWidth*vwY/100
     if (popupWin.outerWidth!==targetWidthInPx||popupWin.outerHeight!==targetHeightInPx){
         popupWin.resizeTo(targetWidthInPx*1.04,targetHeightInPx*1.02)
     }

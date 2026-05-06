@@ -3,10 +3,10 @@ import {ref, onMounted, useTemplateRef, reactive, watch} from "vue"
 import {useRouter} from "vue-router"
 import { popupNewInstance, popupFixSize, popupFixPosition, popupSnapCheck, popupCloseCheck, bridgeCheck, popupShapeCheck } from "../../functions/popup"
 import Naoto from "../character/Naoto.vue"
+import Loading from "../global/loading.vue"
 
 let router = useRouter()
-let lorumPlaceholder = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum"
-const browserTopHeight = window.outerHeight - window.innerHeight
+const browserTopHeight = window.outerHeight - window.innerHeight + window.screenY
 const bridges = {
     center: {
         dom: useTemplateRef("bridgesCenterDom"),
@@ -23,6 +23,7 @@ const animSequence = ref(null)
 let popups = []
 let popupID = {value: 0}
 let chan
+const loadingState = ref(true)
 
 onMounted(() => {
     for (let i=0;i<popups.length;i++){
@@ -132,7 +133,8 @@ function nextButtonAction(){
 
             <br><br>Despite their simplicity, early pages introduced a new form of publishing. A document could be uploaded to a server and reached from another location through a browser. The page became both a document and a place.</div>
     </div>
-    <Naoto id="naoto" :parentComponent="'stage22'" :animSequenceProp="animSequence" @nextButtonActivated="nextButton.disabled = false" />
+    <Loading v-if="loadingState"/>
+    <Naoto id="naoto" :parentComponent="'stage22'" :animSequenceProp="animSequence" @nextButtonActivated="nextButton.disabled = false" @naotoLoadingUpdate="loadingState = false" />
 </template>
 
 

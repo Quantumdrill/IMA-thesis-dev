@@ -4,10 +4,11 @@ import {useRouter} from "vue-router"
 import { popupNewInstance, popupFixSize, popupFixPosition, popupSnapCheck, popupCloseCheck, bridgeCheck } from "../../functions/popup"
 import Naoto from "../character/Naoto.vue"
 import * as THREE from "three"
+import Loading from "../global/loading.vue"
 
 let router = useRouter()
-let lorumPlaceholder = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum"
-const browserTopHeight = window.outerHeight - window.innerHeight
+
+const browserTopHeight = window.outerHeight - window.innerHeight + window.screenY
 const bridges = {
     one: {
         dom: useTemplateRef("bridgeDom"),
@@ -28,6 +29,7 @@ let chan
 let popupPushedState = ref("idle")
 let dropSpeed = 5
 let accumulatedDelta = 0
+const loadingState = ref(true)
 
 onMounted(() => {
     for (let i=0;i<popups.length;i++){
@@ -102,7 +104,7 @@ function tick60fps(){ // 60fps update for popup movement
     if (popups.length>0){
         if (popupPushedState.value==="pushed"){
             popups[0].lockedPositionX += 2.3*window.innerWidth/100/60
-        } else if (popupPushedState.value==="dropping"&&popups[0].window.screenY<(window.innerHeight*90-window.innerWidth*15)/100+browserTopHeight-5){ // check if the popup is not at the bottom of the screen
+        } else if (popupPushedState.value==="dropping"&&popups[0].window.screenY<(window.innerHeight*90-window.innerWidth*15)/100+browserTopHeight-10){ // check if the popup is not at the bottom of the screen
             popups[0].lockedPositionY += dropSpeed*window.innerWidth/100/60
             dropSpeed += 0.5
         }
@@ -142,9 +144,11 @@ requestAnimationFrame(tick60fps)
         </div>
         <button id="nextButton" @click="nextButtonAction" ref="nextButton">next</button>
     </div>
+    <Loading v-if="loadingState"/>
     <Naoto id="naoto" :parentComponent="'stage31'" :animSequenceProp="animSequence" 
     @nextButtonActivated="nextButton.disabled = false" 
-    @popupPushedStateUpdate="(e)=>popupPushedState = e" />
+    @popupPushedStateUpdate="(e)=>popupPushedState = e" 
+    @naotoLoadingUpdate="loadingState = false" />
 </template>
 
 

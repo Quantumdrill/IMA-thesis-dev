@@ -3,14 +3,15 @@ import {ref, onMounted, useTemplateRef, reactive, watch} from "vue"
 import {useRouter} from "vue-router"
 import Naoto from "../character/Naoto.vue"
 import ResetScreen from "../global/resetScreen.vue"
+import Loading from "../global/loading.vue"
 
 let router = useRouter()
-let lorumPlaceholder = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum"
 
 const nextButton = useTemplateRef("nextButton")
 const appearanceButton = useTemplateRef("appearanceButton")
 const bodyDom = useTemplateRef("bodyDom")
 const resetScreenState = ref(false)
+const loadingState = ref(true)
 const animSequence = ref(null)
 let naotoLocalVars = reactive({
     stage24Appearance: true,
@@ -89,7 +90,8 @@ function nextButtonAction(){
     <div class="block" v-if="appearance" id="rightLowerWPlatform">The portal treated the web as a city that needed a main station. From one interface, users could depart toward different categories of information. For a time, portals shaped how many visitors understood the web: less as an open wilderness, more as a mapped public square.</div>
     <div class="block" v-if="appearance" id="leftLowerWPlatform">Forums and message boards allowed users to gather around shared topics. Discussions were organized into threads, with replies accumulating over time. These spaces created persistent communities where knowledge, jokes, arguments, and identities could develop.</div>
     <button id="nextButton" @click="nextButtonAction" ref="nextButton">next</button>
-    <ResetScreen v-if="resetScreenState" ref="resetScreenDom"/>
+    <ResetScreen v-if="resetScreenState"/>
+    <Loading v-if="loadingState"/>
     <Naoto id="naoto" :parentComponent="'stage24'" 
     :animSequenceProp="animSequence" 
     :naotoLocalVarsProp="naotoLocalVars" 
@@ -97,6 +99,7 @@ function nextButtonAction(){
     @naotoPosUpdate="naotoPosUpdate"
     @operationButtonOperation="(e)=>appearanceButton.disabled = !e" 
     @resetScreen="resetScreenState = true"
+    @naotoLoadingUpdate="loadingState = false"
     />
 
 </template>

@@ -14,7 +14,7 @@ const canvas = useTemplateRef("canvasDom")
 let renderer
 const scrnRatio = window.innerWidth/window.innerHeight
 const props = defineProps(["animSequenceProp", "parentComponent", "naotoLocalVarsProp"])
-const emit = defineEmits(["nextButtonActivated", "naotoPosUpdate", "operationButtonOperation", "popupPushedStateUpdate"])
+const emit = defineEmits(["nextButtonActivated", "naotoPosUpdate", "operationButtonOperation", "popupPushedStateUpdate", "naotoLoadingUpdate"])
 
 //fps
 const fps = 8
@@ -128,6 +128,8 @@ onMounted(() => {
     loadCharAnim("Cookie", "stage7", cookie, modelLoader)
     
     loadingManager.onLoad = () => {
+        emit("naotoLoadingUpdate")
+        
         naoto.skm.material = new THREE.MeshLambertMaterial({color: 0xffffff})
         // get bones
         naoto.bones.head = naoto.skeleton.bones[getBoneIndex(naoto.skeleton, "Naoto_rigneck_head_C0_JT")]

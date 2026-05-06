@@ -1,13 +1,13 @@
 <script setup>
 import {ref, onMounted, useTemplateRef, reactive, watch} from "vue"
 import {useRouter, useRoute} from "vue-router"
-import Naoto from "../character/Naoto.vue"
 import Nekomimi from "../character/Nekomimi.vue"
 import gsap from "gsap"
+import Loading from "../global/loading.vue"
 
 let router = useRouter()
 const route = useRoute()
-const browserTopHeight = window.outerHeight - window.innerHeight
+const browserTopHeight = window.outerHeight - window.innerHeight + window.screenY
 const nextButtonDom = useTemplateRef("nextButtonDom")
 const naotoAnimSequence = ref(null)
 const nekomimiAnimSequence = ref(null)
@@ -21,11 +21,10 @@ const hpBarDom = useTemplateRef("hpBarDom")
 let chan
 
 //level related
-let nekomimiVisible = ref(true)
-let naotoVisible = ref(true)
-let naotoAnimStage = ref("watching")
 let charPos = ref(0)
 let hp = ref(5)
+const loadingState = ref(true)
+let nekomimiVisible = ref(false)
 
 onMounted(() => {
     chan = new BroadcastChannel("global")
@@ -35,21 +34,10 @@ onMounted(() => {
         }
     }
     
-    // setTimeout(() => {
-    //     naotoAnimSequence.value = "stage33Init"
-    // }, 1000)
-
+    setTimeout(() => {
+        nekomimiVisible.value = true
+    }, 100)
 })
-
-
-function naotoPosUpdate(pos){
-    if (pos===1){ // what happens after nekomimi is summoned
-        charPos.value = 1
-    } else if (pos===4){ // what happens after naoto is stabbed in submarine
-        charPos.value = 4
-        naotoVisible.value = false
-    }
-}
 
 function nekomimiPosUpdate(pos){
     if (pos===4){ // what happens after nekomimi is summoned
@@ -180,16 +168,16 @@ function shieldClickAction(){
             </div>
         </div>
     </div>
-    <button id="shield" ref="shieldDom">Click at the right moment to parry!</button>
-    <!-- <Naoto id="naoto" v-show="naotoVisible" :parentComponent="'stage51'" :animSequenceProp="naotoAnimSequence" @nextButtonActivated="nextButton.disabled = false" @naotoPosUpdate="naotoPosUpdate" /> -->
-    <div id="nekomimi" v-show="nekomimiVisible">
-        <Nekomimi
-        :parentComponent="'stage51'" 
-        :animSequenceProp="nekomimiAnimSequence" 
-        @nekomimiPosUpdate="nekomimiPosUpdate" 
-        @screenShake="screenShake" 
-        @hpBarUpdate="hpBarUpdate" />
-    </div>
+    <button id="shield" ref="shieldDom">Click at the right moment to parry!</button>    
+    <Loading v-if="loadingState"/>
+    <Nekomimi
+    v-if="nekomimiVisible"
+    :parentComponent="'stage51'" 
+    :animSequenceProp="nekomimiAnimSequence" 
+    @nekomimiPosUpdate="nekomimiPosUpdate" 
+    @screenShake="screenShake" 
+    @hpBarUpdate="hpBarUpdate" 
+    @nekomimiLoadingUpdate="loadingState = false" />
     <div id="hpBar" ref="hpBarDom"></div>
     
 </template>
@@ -386,11 +374,6 @@ nav{
 
 .grayedOut{
     color: #aaa;
-}
-
-#naoto{
-    position: fixed;
-    z-index: -2;
 }
 
 #nekomimi{

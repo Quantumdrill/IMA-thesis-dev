@@ -4,14 +4,14 @@ import {useRouter} from "vue-router"
 import { popupNewInstance, popupFixSize, popupFixPosition, popupSnapCheck, popupCloseCheck, bridgeCheck } from "../../functions/popup"
 import Naoto from "../character/Naoto.vue"
 import Pretext from "../global/pretext.vue"
+import Loading from "../global/loading.vue"
 
 
 let vhToPx = window.innerHeight/100
 let vwToPx = window.innerWidth/100
 
 let router = useRouter()
-let lorumPlaceholder = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum"
-const browserTopHeight = window.outerHeight - window.innerHeight
+const browserTopHeight = window.outerHeight - window.innerHeight + window.screenY
 const bridges = {
     start: {
         dom: useTemplateRef("bridgeStartDom"),
@@ -28,6 +28,7 @@ const popupButton = useTemplateRef("popupButton")
 const naotoVisible = ref(true)
 const naotoPos = ref(1)
 const animSequence = ref(null)
+const loadingState = ref(true)
 let popups = []
 let popupID = {value: 0}
 let chan
@@ -186,11 +187,13 @@ function naotoPosUpdate(pos){
         <button id="nextButton" @click="nextButtonAction" ref="nextButton">next</button>
         <Pretext id="pretext" :popupObstacle="popupObstacle" />
     </div>
+    <Loading v-if="loadingState"/>
     <Naoto id="naoto" v-if="naotoVisible" 
     :parentComponent="'stage32'" 
     :animSequenceProp="animSequence" 
     @nextButtonActivated="nextButton.disabled = false" 
-    @naotoPosUpdate="naotoPosUpdate" />
+    @naotoPosUpdate="naotoPosUpdate" 
+    @naotoLoadingUpdate="loadingState = false" />
 </template>
 
 

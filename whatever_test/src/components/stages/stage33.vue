@@ -1,14 +1,15 @@
 <script setup>
-import {ref, onMounted, useTemplateRef, reactive, watch} from "vue"
+import {ref, onMounted, useTemplateRef, reactive, watch, nextTick} from "vue"
 import {useRouter, useRoute} from "vue-router"
 import { popupNewInstance, popupFixSize, popupFixPosition, popupSnapCheck, popupCloseCheck, bridgeCheck } from "../../functions/popup"
 import Naoto from "../character/Naoto.vue"
 import Nekomimi from "../character/Nekomimi.vue"
 import gsap from "gsap"
+import Loading from "../global/loading.vue"
 
 let router = useRouter()
 const route = useRoute()
-const browserTopHeight = window.outerHeight - window.innerHeight
+const browserTopHeight = window.outerHeight - window.innerHeight + window.screenY
 const nextButtonDom = useTemplateRef("nextButtonDom")
 const naotoAnimSequence = ref(null)
 const nekomimiAnimSequence = ref(null)
@@ -19,6 +20,9 @@ let popups = []
 let popupID = {value: 0}
 let availableBridges = ref(1)
 let chan
+const naotoLoadingState = ref(true)
+const nekomimiLoadingState = ref(true)
+const nekomimiComponentMounted = ref(true)
 
 //level related
 let yesOrNo = ref(null)
@@ -70,6 +74,7 @@ onMounted(() => {
         () => route.query.uninvitedGuest,
         (newValue) => {
             if (newValue === "false") {
+                nekomimiComponentMounted.value = false
                 router.push('/shield')
             }
         },
@@ -250,12 +255,22 @@ function artifactMapClickAction(){
             <div id="footerText">Copyright © 2026 Web Waypoint, All Rights Reserved</div>
         </div>
     </div>
-    <Naoto id="naoto" v-show="naotoVisible" :parentComponent="'stage33'" :animSequenceProp="naotoAnimSequence" @nextButtonActivated="nextButton.disabled = false" @naotoPosUpdate="naotoPosUpdate" />
+    <Loading v-if="naotoLoadingState||nekomimiLoadingState"/>
+    <Naoto id="naoto" 
+    v-show="naotoVisible" 
+    :parentComponent="'stage33'" 
+    :animSequenceProp="naotoAnimSequence" 
+    @nextButtonActivated="nextButton.disabled = false" 
+    @naotoPosUpdate="naotoPosUpdate" 
+    @naotoLoadingUpdate="naotoLoadingState = false" />
     <Nekomimi id="nekomimi" 
+    v-if="nekomimiComponentMounted"
     v-show="nekomimiVisible" 
     :parentComponent="'stage33'" 
     :animSequenceProp="nekomimiAnimSequence" 
-    @nekomimiPosUpdate="nekomimiPosUpdate" />
+    @nekomimiPosUpdate="nekomimiPosUpdate" 
+    @nekomimiLoadingUpdate="nekomimiLoadingState = false" />
+    
 </template>
 
 
@@ -454,7 +469,7 @@ nav{
     height: 100vh;
     left: 40vw;
     top: 5vh;
-    color: #de7d7d;
+    color: #e83434;
     font-size: 1.5vw;
     z-index: 10;
 }

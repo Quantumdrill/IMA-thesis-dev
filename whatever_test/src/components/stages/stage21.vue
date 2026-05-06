@@ -3,6 +3,7 @@ import {ref, onMounted, useTemplateRef, reactive, watch} from "vue"
 import {useRouter} from "vue-router"
 import { popupNewInstance, popupFixSize, popupFixPosition, popupSnapCheck, popupCloseCheck, bridgeCheck } from "../../functions/popup"
 import Naoto from "../character/Naoto.vue"
+import Loading from "../global/loading.vue"
 
 let router = useRouter()
 
@@ -30,6 +31,7 @@ const animSequence = ref(null)
 let popups = []
 let popupID = {value: 0}
 let chan
+const loadingState = ref(true)
 
 onMounted(() => {
     for (let i=0;i<popups.length;i++){
@@ -81,10 +83,7 @@ function popupTick(){
     popups.forEach((elem,i)=>{ 
         if (document.hasFocus()){
             console.log("focus")
-            setTimeout(()=>{
-                console.log("focus2")
-                elem.window.focus()
-            },100)
+            elem.window.focus()
         }
         popupCloseCheck(elem,popups,i,bridges,availableBridges)
         popupFixSize(elem.window,15,15)
@@ -143,7 +142,8 @@ function nextButtonAction(){
 
             <br><br>Earlier hypertext systems explored the possibility of non-linear writing, reference networks, and interactive documents. The web later transformed this concept into a global structure, where any page could point toward another through a hyperlink.</div>
     </div>
-    <Naoto id="naoto" :parentComponent="'stage21'" :animSequenceProp="animSequence" @nextButtonActivated="nextButton.disabled = false" />
+    <Loading v-if="loadingState"/>
+    <Naoto id="naoto" :parentComponent="'stage21'" :animSequenceProp="animSequence" @nextButtonActivated="nextButton.disabled = false" @naotoLoadingUpdate="loadingState = false" />
 </template>
 
 
