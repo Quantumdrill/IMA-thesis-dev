@@ -6,8 +6,7 @@ import Naoto from "../character/Naoto.vue"
 
 let router = useRouter()
 
-console.log(window.screenY)
-const browserTopHeight = window.outerHeight - window.innerHeight
+const browserTopHeight = window.outerHeight - window.innerHeight + window.screenY
 const bridges = {
     left: {
         dom: useTemplateRef("bridgesLeftDom"),
@@ -78,9 +77,14 @@ function popupTick(){
     }
 
     //iterate for all opened popups
+    window.focus()
     popups.forEach((elem,i)=>{ 
         if (document.hasFocus()){
-            elem.window.focus()
+            console.log("focus")
+            setTimeout(()=>{
+                console.log("focus2")
+                elem.window.focus()
+            },100)
         }
         popupCloseCheck(elem,popups,i,bridges,availableBridges)
         popupFixSize(elem.window,15,15)

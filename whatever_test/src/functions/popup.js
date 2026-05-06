@@ -25,6 +25,9 @@ export function popupNewInstance(popupID,popups,left,top,vw,popupTick,availableB
         }
         popupID.value += 1
         popups.push(newPopup)
+        popups.forEach(elem=>{
+            elem.window.focus()
+        })
         setTimeout(()=>{
             chan.postMessage({popupType:2,id:newPopup.id,name:newPopup.name})
         },10)
