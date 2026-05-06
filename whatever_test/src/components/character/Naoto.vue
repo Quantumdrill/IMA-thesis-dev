@@ -600,7 +600,7 @@ const naotoAnimSequences = {
             tl.to(cam.position, {
                 duration: 5,
                 x: 0,
-                y: -21,
+                y: -21-(2.15-window.innerWidth/window.innerHeight)*20,
                 z: 20,
                 ease: "power2.inOut",
             }, "+=2")

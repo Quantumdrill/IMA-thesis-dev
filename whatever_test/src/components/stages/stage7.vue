@@ -39,10 +39,10 @@ function naotoPosUpdate(pos){
 }
 
 window.addEventListener("scroll", (e) => {
-    // if (window.scrollY > 170*window.innerWidth/100 && !initialized){
-    //     animSequence.value = "stage7"
-    //     initialized = true
-    // }
+    if (window.scrollY > 170*window.innerWidth/100 && !initialized){
+        animSequence.value = "stage7"
+        initialized = true
+    }
 })
 </script>
 <template>
