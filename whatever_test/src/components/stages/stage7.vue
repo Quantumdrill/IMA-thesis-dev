@@ -34,10 +34,10 @@ function naotoPosUpdate(pos){
 }
 
 window.addEventListener("scroll", (e) => {
-    if (window.scrollY > 20*window.innerWidth/100+window.innerHeight*3 && !initialized){
-        animSequence.value = "stage7"
-        initialized = true
-    }
+    // if (window.scrollY > 20*window.innerWidth/100+window.innerHeight*3 && !initialized){
+    //     animSequence.value = "stage7"
+    //     initialized = true
+    // }
 })
 </script>
 <template>
@@ -102,7 +102,7 @@ window.addEventListener("scroll", (e) => {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: 50vw;
 }
 
 h1 {
@@ -115,7 +115,7 @@ h2 {
 
 #historyContainer{
     width: 100vw;
-    height: 300vh;
+    height: 150vw;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -183,7 +183,7 @@ button{
     bottom: -21vh;
     right: 10vw;
     width: 20vw;
-    height: 20vh;
+    height: 10vw;
     z-index: 2;
     display: flex;
     border-style: solid;

@@ -15,7 +15,7 @@ let router = useRouter()
             <li>The web experience is now currently only available on wide-screen desktop devices.</li>
             <ul>
                 <li>To interact with popup windows normally, open the dev tools of the browser, undock it and minimize it at all times during gameplay. <br>
-                    To do this, Command + Shift + I, then Command + Shift + D, then minimize the undocked window.</li>
+                    To do this, Command + Option + I, then Command + Shift + D, then minimize the undocked window.</li>
                 <li>Safari is not supported.</li>
             </ul>
             <br></br>
