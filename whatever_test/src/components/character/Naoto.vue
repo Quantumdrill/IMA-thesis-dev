@@ -13,6 +13,7 @@ const scene = new THREE.Scene()
 const canvas = useTemplateRef("canvasDom")
 let renderer
 const scrnRatio = window.innerWidth/window.innerHeight
+console.log(scrnRatio)
 const props = defineProps(["animSequenceProp", "parentComponent", "naotoLocalVarsProp"])
 const emit = defineEmits(["nextButtonActivated", "naotoPosUpdate", "operationButtonOperation", "popupPushedStateUpdate", "naotoLoadingUpdate"])
 
@@ -600,7 +601,7 @@ const naotoAnimSequences = {
             tl.to(cam.position, {
                 duration: 5,
                 x: 0,
-                y: -21-(2.15-window.innerWidth/window.innerHeight)*20,
+                y: -20-(2.09-window.innerWidth/window.innerHeight)*20,
                 z: 20,
                 ease: "power2.inOut",
             }, "+=2")
