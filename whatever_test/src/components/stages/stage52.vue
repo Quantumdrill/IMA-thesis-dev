@@ -8,7 +8,6 @@ let router = useRouter()
 const browserTopHeight = window.outerHeight - window.innerHeight + window.screenY
 let scrn = {x: screen.availWidth, y:screen.availHeight}
 let availableBridges = reactive({value: 2})
-const popupButton = useTemplateRef("popupButton")
 const hpBarDom = useTemplateRef("hpBarDom")
 const bridges = {
     dummy: {
@@ -24,7 +23,7 @@ let popupID = {value: 0}
 let chan
 
 //level related
-let hp = ref(8)
+let hp = ref(5)
 let popupWidth = 15*window.innerWidth/100
 
 onMounted(() => {
@@ -86,7 +85,7 @@ function popupTick(){
         if (document.hasFocus()){
             elem.window.focus()
         }
-        popupFixSize(elem.window,15,15)
+        // popupFixSize(elem.window,15,15)
         if (elem.locked){
             popupFixPosition(elem.window,elem.lockedPositionX,elem.lockedPositionY)
         }
@@ -106,7 +105,7 @@ function popupTick(){
 
 function spawnNewPopup(){
     let y = Math.random()*scrn.y-15*window.innerHeight/100
-    popupNewInstance(popupID,popups,scrn.x-popupWidth-15,y,15,popupTick,availableBridges,chan)
+    popupNewInstance(popupID,popups,80*window.innerWidth/100,y,15,popupTick,availableBridges,chan)
     colliderInitialize()
 }
 
@@ -134,21 +133,31 @@ function colliderTick(){
 
 function collisionInter(){
     if (Math.abs(popups[1].window.screenX-popups[0].window.screenX)<popupWidth&&Math.abs(popups[1].window.screenY-popups[0].window.screenY)<popupWidth){ //detect for collision with driver popup
+        
         if (Math.abs(popups[1].window.screenX-popups[0].window.screenX)>Math.abs(popups[1].window.screenY-popups[0].window.screenY)){ //detect x or y collision, > meaning x
             if (popups[1].window.screenX>popups[0].window.screenX){ // p4 to the right of p3
-                popups[1].window.moveTo(popups[0].window.screenX+popupWidth,popups[1].window.screenY)
-                popups[1].window.vx*=-1
+                popups[1].window.moveBy(popupWidth/4,0)
+                if (popups[1].window.vx<0){
+                    popups[1].window.vx*=-1
+                }
             } else if (popups[1].window.screenX<popups[0].window.screenX){ // p4 to the left of p3
-                popups[1].window.moveTo(popups[0].window.screenX-popupWidth,popups[1].window.screenY)
+                popups[1].window.moveBy(-popupWidth/4,0)
+                if (popups[1].window.vx>0){
+                    popups[1].window.vx*=-1
+                }
                 popups[1].window.vx*=-1
             }   
         } else {
             if (popups[1].window.screenY>popups[0].window.screenY){ // p4 to the bottom of p3
-                popups[1].window.moveTo(popups[1].window.screenX,popups[0].window.screenY+popupWidth)
-                popups[1].window.vy*=-1
+                popups[1].window.moveBy(0,popupWidth/4)
+                if (popups[1].window.vy<0){
+                    popups[1].window.vy*=-1
+                }
             } else if (popups[1].window.screenY<popups[0].window.screenY){ // p4 to the top of p3
-                popups[1].window.moveTo(popups[1].window.screenX,popups[0].window.screenY-popupWidth)
-                popups[1].window.vy*=-1
+                popups[1].window.moveBy(0,-popupWidth/4)
+                if (popups[1].window.vy>0){
+                    popups[1].window.vy*=-1
+                }
             }
         }
          
@@ -183,7 +192,7 @@ function collisionEdge(){
                 availableBridges.value += 1
             }, [], "+=0.5")
         }
-    } else if (popups[1].window.screenY<5||popups[1].window.screenY+popupWidth>scrn.y-15){
+    } else if (popups[1].window.screenY<window.screenY+10||popups[1].window.screenY+popupWidth>scrn.y-15){
         popups[1].window.vy*=-1
     }
 }
@@ -210,7 +219,7 @@ function colliderGetCurrentVelocity(){
 function hpBarUpdate(){
     if (hp.value > 0){
         gsap.to(hpBarDom.value, {
-            width: "-=10vw",
+            width: "-=16vw",
             duration: 0.3,
             ease: "none",
         })

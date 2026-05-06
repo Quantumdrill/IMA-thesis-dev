@@ -150,12 +150,9 @@ function nekomimiPosUpdate(pos){
                 chan.postMessage({type:"stage33PopupComm",id:popups[0].id,action:"stabbed"})
             }
         })
-        tl.to(nextButtonDom.value, {
-            x: "+40vw",
-            y: "-15vw",
-            ease: "none",
-            duration: 0.1,
-        })
+        tl.call(() => {
+            nextButtonDom.value.style.display = "none"
+        }, [], "+=0")
         tl.call(() => {
             popupFlyingState.value = true
         }, [], "+=0.5")
