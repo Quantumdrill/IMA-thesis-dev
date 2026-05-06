@@ -150,9 +150,9 @@ h2 {
     height: 15vw;
     position: relative;
     top: 7vw;
-    border-style: solid;
+    border-style: dotted;
     border-width: 2px;
-    border-radius: 1vw;
+    border-radius: 7.5vw;
     border-color: #d4d4d4;
 }
 

@@ -85,7 +85,7 @@ function popupTick(){
         if (document.hasFocus()){
             elem.window.focus()
         }
-        // popupFixSize(elem.window,15,15)
+        popupFixSize(elem.window,15,15)
         if (elem.locked){
             popupFixPosition(elem.window,elem.lockedPositionX,elem.lockedPositionY)
         }
@@ -104,13 +104,13 @@ function popupTick(){
 }
 
 function spawnNewPopup(){
-    let y = Math.random()*scrn.y-15*window.innerHeight/100
-    popupNewInstance(popupID,popups,80*window.innerWidth/100,y,15,popupTick,availableBridges,chan)
+    let y = window.screenY+Math.random()*scrn.y-15*window.innerHeight/100
+    popupNewInstance(popupID,popups,window.screenX+80*window.innerWidth/100,y,15,popupTick,availableBridges,chan)
     colliderInitialize()
 }
 
 function spawnFinalPopup(){
-    popupNewInstance(popupID,popups,80*window.innerWidth/100,80*scrn.y/100,15,popupTick,availableBridges,chan)
+    popupNewInstance(popupID,popups,window.screenX+80*window.innerWidth/100,window.screenY+80*scrn.y/100,15,popupTick,availableBridges,chan)
     popups[1].window.vx = -5
     popups[1].window.vy = 0
 }
@@ -136,12 +136,12 @@ function collisionInter(){
         
         if (Math.abs(popups[1].window.screenX-popups[0].window.screenX)>Math.abs(popups[1].window.screenY-popups[0].window.screenY)){ //detect x or y collision, > meaning x
             if (popups[1].window.screenX>popups[0].window.screenX){ // p4 to the right of p3
-                popups[1].window.moveBy(popupWidth/4,0)
+                popups[1].window.moveBy(popupWidth/8,0)
                 if (popups[1].window.vx<0){
                     popups[1].window.vx*=-1
                 }
             } else if (popups[1].window.screenX<popups[0].window.screenX){ // p4 to the left of p3
-                popups[1].window.moveBy(-popupWidth/4,0)
+                popups[1].window.moveBy(-popupWidth/8,0)
                 if (popups[1].window.vx>0){
                     popups[1].window.vx*=-1
                 }
@@ -149,12 +149,12 @@ function collisionInter(){
             }   
         } else {
             if (popups[1].window.screenY>popups[0].window.screenY){ // p4 to the bottom of p3
-                popups[1].window.moveBy(0,popupWidth/4)
+                popups[1].window.moveBy(0,popupWidth/8)
                 if (popups[1].window.vy<0){
                     popups[1].window.vy*=-1
                 }
             } else if (popups[1].window.screenY<popups[0].window.screenY){ // p4 to the top of p3
-                popups[1].window.moveBy(0,-popupWidth/4)
+                popups[1].window.moveBy(0,-popupWidth/8)
                 if (popups[1].window.vy>0){
                     popups[1].window.vy*=-1
                 }
